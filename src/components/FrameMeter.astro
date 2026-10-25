@@ -1,4 +1,5 @@
 ---
+import { lien } from '../lib/lien';
 // Mesure en direct de la cadence d'affichage du navigateur du visiteur.
 ---
 <figure class="compteur panneau" data-compteur>
@@ -15,7 +16,7 @@
   <canvas data-trace height="120" aria-hidden="true"></canvas>
   <figcaption>
     Mesuré en direct. Le navigateur est généralement limité à la fréquence de ton écran :
-    si ce chiffre est bas alors que ton écran monte plus haut, lance le <a href="/setup">diagnostic</a>.
+    si ce chiffre est bas alors que ton écran monte plus haut, lance le <a href={lien('/setup')}>diagnostic</a>.
   </figcaption>
 </figure>
 

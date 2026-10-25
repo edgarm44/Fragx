@@ -1,4 +1,5 @@
 ---
+import { lien, sansBase } from '../lib/lien';
 const liens = [
   { href: '/setup', label: 'Setup' },
   { href: '/benchmark', label: 'Benchmark' },
@@ -6,12 +7,12 @@ const liens = [
   { href: '/visee', label: 'Visée' },
   { href: '/guides', label: 'Guides' },
 ];
-const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';
+const chemin = sansBase(Astro.url.pathname).replace(/\/$/, '') || '/';
 const estActif = (href: string) => chemin === href || chemin.startsWith(href + '/');
 ---
 <header class="entete">
   <div class="conteneur barre">
-    <a class="marque" href="/" aria-label="Fragx, accueil">
+    <a class="marque" href={lien('/')} aria-label="Fragx, accueil">
       <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
         <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none">
           <path d="M16 3v8M16 21v8M3 16h8M21 16h8" />
@@ -24,7 +25,7 @@ const estActif = (href: string) => chemin === href || chemin.startsWith(href + '
       <ul>
         {liens.map((l) => (
           <li>
-            <a href={l.href} aria-current={estActif(l.href) ? 'page' : undefined}>{l.label}</a>
+            <a href={lien(l.href)} aria-current={estActif(l.href) ? 'page' : undefined}>{l.label}</a>
           </li>
         ))}
       </ul>

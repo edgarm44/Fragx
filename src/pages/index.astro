@@ -1,4 +1,5 @@
 ---
+import { lien } from '../lib/lien';
 import Base from '../layouts/Base.astro';
 import FrameMeter from '../components/FrameMeter.astro';
 import { JEUX_COUVERTS } from '../data/jeux';
@@ -45,8 +46,8 @@ const outils = [
         Gratuit, sans compte, directement dans ton navigateur.
       </p>
       <div class="actions">
-        <a class="bouton bouton-principal" href="/setup">Diagnostiquer mon setup</a>
-        <a class="bouton bouton-secondaire" href="/benchmark">Lancer le benchmark</a>
+        <a class="bouton bouton-principal" href={lien('/setup')}>Diagnostiquer mon setup</a>
+        <a class="bouton bouton-secondaire" href={lien('/benchmark')}>Lancer le benchmark</a>
       </div>
     </div>
     <FrameMeter />
@@ -57,7 +58,7 @@ const outils = [
     <ul class="outils">
       {outils.map((o) => (
         <li>
-          <a href={o.href}>
+          <a href={lien(o.href)}>
             <span class="nom">{o.nom}</span>
             <span class="desc">{o.texte}</span>
             <span class="duree">{o.duree}</span>

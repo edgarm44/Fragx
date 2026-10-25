@@ -1,4 +1,5 @@
 ---
+import { lien } from '../../lib/lien';
 import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
 
@@ -13,7 +14,7 @@ const date = guide.data.misAJour.toLocaleDateString('fr-FR', { day: 'numeric', m
 ---
 <Base title={guide.data.titre} description={guide.data.description}>
   <article class="conteneur article">
-    <p class="retour"><a href="/guides">Tous les guides</a></p>
+    <p class="retour"><a href={lien('/guides')}>Tous les guides</a></p>
     <h1>{guide.data.titre}</h1>
     <p class="meta">{guide.data.jeu}. Mis à jour le {date}.</p>
     <div class="contenu">

@@ -1,4 +1,5 @@
 ---
+import { lien } from '../lib/lien';
 import Base from '../layouts/Base.astro';
 import { JEUX_COUVERTS } from '../data/jeux';
 ---
@@ -99,7 +100,7 @@ import { JEUX_COUVERTS } from '../data/jeux';
       <ol class="liste" hidden></ol>
       <p class="note" hidden>
         L'évaluation de la carte graphique et du processeur par modèle arrive avec la base de données matériel.
-        En attendant, compare ton score sur le <a href="/benchmark">benchmark</a>.
+        En attendant, compare ton score sur le <a href={lien('/benchmark')}>benchmark</a>.
       </p>
     </section>
   </div>

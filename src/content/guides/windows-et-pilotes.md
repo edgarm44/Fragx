@@ -13,7 +13,7 @@ C'est l'oubli le plus courant : un écran 144 Hz ou 240 Hz reste souvent réglé
 
 Dans **Paramètres > Système > Affichage > Affichage avancé**, choisis la fréquence la plus élevée dans « Choisir une fréquence d'actualisation ». Si elle n'apparaît pas, vérifie le câble : sur beaucoup d'écrans, seules les prises DisplayPort ou HDMI 2.0 et plus récentes permettent les hautes fréquences. Branche aussi l'écran sur la carte graphique, pas sur la carte mère.
 
-Le [diagnostic du setup](/setup) mesure la fréquence réellement utilisée par ton navigateur, pratique pour contrôler.
+Le [diagnostic du setup](../../setup/) mesure la fréquence réellement utilisée par ton navigateur, pratique pour contrôler.
 
 ## Mettre à jour le pilote graphique
 

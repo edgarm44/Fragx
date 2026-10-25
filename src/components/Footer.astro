@@ -1,4 +1,5 @@
 ---
+import { lien } from '../lib/lien';
 const annee = new Date().getFullYear();
 ---
 <footer class="pied">
@@ -8,7 +9,7 @@ const annee = new Date().getFullYear();
       Les noms des jeux appartiennent à leurs éditeurs respectifs.
     </p>
     <ul>
-      <li><a href="/mentions-legales">Mentions légales et confidentialité</a></li>
+      <li><a href={lien('/mentions-legales')}>Mentions légales et confidentialité</a></li>
       <li>© {annee} Fragx</li>
     </ul>
   </div>
