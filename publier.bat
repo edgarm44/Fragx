@@ -10,7 +10,7 @@ if errorlevel 1 (
   echo [ERREUR] Node.js n'est pas installe.
   echo Installe la version LTS depuis https://nodejs.org
   echo ou en ligne de commande : winget install --id OpenJS.NodeJS.LTS -e
-  echo Puis ferme cette fenetre et relance deploy.bat.
+  echo Puis ferme cette fenetre et relance publier.bat.
   goto :fin
 )
 node -e "const [a,b,c]=process.versions.node.split('.').map(Number);process.exit(a>22||(a===22&&(b>23||(b===23&&c>=4)))?0:1)"
