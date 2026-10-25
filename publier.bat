@@ -69,7 +69,7 @@ echo       Une page Cloudflare va s'ouvrir dans ton navigateur :
 echo       connecte-toi puis clique sur "Allow". Reviens ensuite ici.
 echo.
 echo === wrangler login === >> "%LOG%"
-call npx --no-install wrangler login >> "%LOG%" 2>&1
+call npx --no-install wrangler login
 call npx --no-install wrangler whoami > "%TEMP%\fragx_whoami.txt" 2>&1
 type "%TEMP%\fragx_whoami.txt" >> "%LOG%"
 findstr /i /c:"logged in" "%TEMP%\fragx_whoami.txt" >nul
