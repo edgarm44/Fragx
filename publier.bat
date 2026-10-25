@@ -42,11 +42,27 @@ rem 4. Envoyer sur GitHub : la publication du site se lance automatiquement
 echo.
 echo Envoi vers https://github.com/edgarm44/Fragx ...
 git push -u origin main
-if errorlevel 1 (
-  echo.
-  echo [ERREUR] L'envoi a echoue. Copie le message ci-dessus et envoie-le a Claude.
-  goto :fin
-)
+if not errorlevel 1 goto :envoye
+
+rem Envoi refuse : l'historique local a-t-il ete reecrit ?
+git merge-base --is-ancestor origin/main main >nul 2>&1
+if not errorlevel 1 goto :echec_envoi
+echo.
+echo L'historique local a ete reecrit (par exemple pour masquer une adresse e-mail).
+echo Il faut remplacer l'historique en ligne par celui de ce PC.
+set "REP="
+set /p "REP=Remplacer l'historique sur GitHub ? (O/N) : "
+if /i not "%REP%"=="O" goto :echec_envoi
+git push --force-with-lease -u origin main
+if errorlevel 1 goto :echec_envoi
+goto :envoye
+
+:echec_envoi
+echo.
+echo [ERREUR] L'envoi a echoue. Copie le message ci-dessus et envoie-le a Claude.
+goto :fin
+
+:envoye
 echo.
 echo [OK] Code envoye. GitHub construit et met en ligne le site (1 a 2 minutes).
 echo      Suivi de la publication : %ACTIONS%
