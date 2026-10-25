@@ -86,9 +86,17 @@ set "CODE=%errorlevel%"
 type "%TEMP%\fragx_deploy.txt" >> "%LOG%"
 if not "%CODE%"=="0" set "ETAPE=publication" & goto :echec
 
+set "URL="
+for /f "tokens=1" %%u in ('findstr /r /c:"https://[^ ]*workers\.dev" "%TEMP%\fragx_deploy.txt"') do set "URL=%%u"
 echo.
-echo [OK] Site en ligne :
-findstr /r /c:"https://.*workers\.dev" "%TEMP%\fragx_deploy.txt"
+if not defined URL (
+  echo [OK] Publication terminee. L'adresse du site est indiquee dans publier.log.
+  goto :fin
+)
+echo [OK] Site en ligne : %URL%
+> "%~dp0adresse-du-site.txt" echo %URL%
+echo      Adresse enregistree dans adresse-du-site.txt, ouverture dans le navigateur...
+start "" "%URL%"
 goto :fin
 
 rem ---------------------------------------------------------------------
