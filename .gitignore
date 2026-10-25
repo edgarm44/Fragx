@@ -24,3 +24,9 @@ desktop.ini
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Cloudflare
+.wrangler/
+
+# Archives temporaires
+*.tgz

@@ -1,0 +1,41 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const guides = (await getCollection('guides')).sort((a, b) => b.data.misAJour.getTime() - a.data.misAJour.getTime());
+const date = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<Base title="Guides" description="Guides pratiques pour optimiser ton PC et tes réglages sur les jeux de tir.">
+  <div class="conteneur en-tete-page">
+    <h1>Guides</h1>
+    <p class="chapo">Réglages système, pilotes et paramètres en jeu, expliqués simplement.</p>
+  </div>
+  <div class="conteneur">
+    <ul class="liste">
+      {guides.map((g) => (
+        <li>
+          <a href={`/guides/${g.id}`}>
+            <span class="jeu">{g.data.jeu}</span>
+            <span class="titre">{g.data.titre}</span>
+            <span class="desc">{g.data.description}</span>
+            <span class="date">Mis à jour le {date(g.data.misAJour)}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p class="suite">Prochains guides : réglages graphiques de Valorant, Fortnite et Apex Legends.</p>
+  </div>
+</Base>
+
+<style>
+  .liste { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--trait); }
+  .liste a {
+    display: grid; gap: 0.3rem; padding: 1.25rem 0.25rem;
+    border-bottom: 1px solid var(--trait); text-decoration: none; color: var(--texte);
+  }
+  .liste a:hover .titre { color: var(--ambre); }
+  .jeu, .date { color: var(--gris); font-size: var(--t-s); }
+  .titre { font-family: var(--titre); font-size: var(--t-xl); font-weight: 600; }
+  .desc { color: var(--gris); max-width: 65ch; }
+  .suite { color: var(--gris); margin-top: 1.5rem; }
+</style>

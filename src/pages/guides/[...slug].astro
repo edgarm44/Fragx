@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const guides = await getCollection('guides');
+  return guides.map((guide) => ({ params: { slug: guide.id }, props: { guide } }));
+}
+
+const { guide } = Astro.props;
+const { Content } = await render(guide);
+const date = guide.data.misAJour.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<Base title={guide.data.titre} description={guide.data.description}>
+  <article class="conteneur article">
+    <p class="retour"><a href="/guides">Tous les guides</a></p>
+    <h1>{guide.data.titre}</h1>
+    <p class="meta">{guide.data.jeu}. Mis à jour le {date}.</p>
+    <div class="contenu">
+      <Content />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .article { padding-block: clamp(2rem, 6vw, 3.5rem); }
+  .article h1 { max-width: 20ch; }
+  .retour { font-size: var(--t-s); }
+  .meta { color: var(--gris); }
+  .contenu { max-width: 68ch; margin-top: 2rem; }
+  .contenu :global(h2) { font-size: var(--t-xl); margin-top: 2.25rem; }
+  .contenu :global(p), .contenu :global(li) { color: #d6d5e6; }
+  .contenu :global(strong) { color: var(--texte); }
+</style>

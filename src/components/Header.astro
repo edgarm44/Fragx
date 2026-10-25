@@ -1,0 +1,80 @@
+---
+const liens = [
+  { href: '/setup', label: 'Setup' },
+  { href: '/benchmark', label: 'Benchmark' },
+  { href: '/sensibilite', label: 'Sensibilité' },
+  { href: '/visee', label: 'Visée' },
+  { href: '/guides', label: 'Guides' },
+];
+const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';
+const estActif = (href: string) => chemin === href || chemin.startsWith(href + '/');
+---
+<header class="entete">
+  <div class="conteneur barre">
+    <a class="marque" href="/" aria-label="Fragx, accueil">
+      <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+        <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none">
+          <path d="M16 3v8M16 21v8M3 16h8M21 16h8" />
+        </g>
+        <circle cx="16" cy="16" r="2" fill="currentColor" />
+      </svg>
+      <span>Fragx</span>
+    </a>
+    <nav aria-label="Navigation principale">
+      <ul>
+        {liens.map((l) => (
+          <li>
+            <a href={l.href} aria-current={estActif(l.href) ? 'page' : undefined}>{l.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .entete {
+    border-bottom: 1px solid var(--trait);
+    background: color-mix(in srgb, var(--nuit) 92%, transparent);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    backdrop-filter: blur(6px);
+  }
+  .barre {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3.75rem;
+    flex-wrap: wrap;
+  }
+  .marque {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--ambre);
+    text-decoration: none;
+    font-family: var(--titre);
+    font-weight: 700;
+    font-size: var(--t-xl);
+  }
+  .marque span { color: var(--texte); }
+  ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    margin: 0;
+    padding: 0.5rem 0;
+  }
+  nav a {
+    color: var(--gris);
+    text-decoration: none;
+    font-weight: 500;
+    padding-block: 0.3rem;
+    border-bottom: 2px solid transparent;
+  }
+  nav a:hover { color: var(--texte); }
+  nav a[aria-current='page'] { color: var(--texte); border-bottom-color: var(--ambre); }
+</style>

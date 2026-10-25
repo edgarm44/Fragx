@@ -1,0 +1,276 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Entraînement de visée" description="Trois exercices de visée dans le navigateur : vitesse, précision et suivi de cible. Records enregistrés sur ton appareil.">
+  <div class="conteneur en-tete-page">
+    <h1>Entraînement de visée</h1>
+    <p class="chapo">
+      Choisis un exercice et clique sur Commencer. Tes records restent sur cet appareil.
+    </p>
+  </div>
+
+  <div class="conteneur">
+    <div class="modes" role="radiogroup" aria-label="Exercice">
+      <button type="button" role="radio" aria-checked="true" data-mode="vitesse">
+        <strong>Vitesse</strong><span>30 cibles, le plus vite possible</span>
+      </button>
+      <button type="button" role="radio" aria-checked="false" data-mode="precision">
+        <strong>Précision</strong><span>Petites cibles pendant 30 secondes</span>
+      </button>
+      <button type="button" role="radio" aria-checked="false" data-mode="suivi">
+        <strong>Suivi</strong><span>Garde le curseur sur la cible mobile</span>
+      </button>
+    </div>
+
+    <div class="arene">
+      <canvas id="terrain" aria-label="Zone d'entraînement"></canvas>
+      <div class="hud">
+        <span><span class="libelle">Temps</span> <span class="chiffre" id="h-temps">--</span></span>
+        <span><span class="libelle" id="h-lib-score">Touches</span> <span class="chiffre" id="h-score">--</span></span>
+        <span><span class="libelle">Précision</span> <span class="chiffre" id="h-prec">--</span></span>
+      </div>
+      <div class="accueil" id="accueil">
+        <p id="consigne"></p>
+        <button class="bouton bouton-principal" id="demarrer" type="button">Commencer</button>
+        <p class="record" id="record"></p>
+      </div>
+    </div>
+    <p class="aide-bas">Utilise la même souris et le même DPI qu'en jeu. Échap pour arrêter.</p>
+  </div>
+</Base>
+
+<style>
+  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+  .modes button {
+    text-align: left; background: var(--plaque); color: var(--texte);
+    border: 1px solid var(--trait); border-radius: var(--rayon);
+    padding: 0.8rem 1rem; font: inherit; cursor: pointer; display: grid; gap: 0.15rem;
+  }
+  .modes button strong { font-family: var(--titre); font-size: var(--t-l); font-weight: 600; }
+  .modes button span { color: var(--gris); font-size: var(--t-s); }
+  .modes button[aria-checked='true'] { border-color: var(--ambre); box-shadow: inset 0 0 0 1px var(--ambre); }
+  .arene {
+    position: relative; aspect-ratio: 16 / 9; min-height: 18rem;
+    border: 1px solid var(--trait); border-radius: var(--rayon); overflow: hidden;
+    background:
+      linear-gradient(color-mix(in srgb, var(--trait) 45%, transparent) 1px, transparent 1px) 0 0 / 48px 48px,
+      linear-gradient(90deg, color-mix(in srgb, var(--trait) 45%, transparent) 1px, transparent 1px) 0 0 / 48px 48px,
+      #101326;
+  }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+  .hud { position: absolute; top: 0.6rem; left: 0.75rem; right: 0.75rem; display: flex; gap: 1.5rem; pointer-events: none; }
+  .hud .chiffre { font-size: var(--t-xl); color: var(--ambre); }
+  .libelle { color: var(--gris); font-size: var(--t-xs); }
+  .accueil {
+    position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 0.75rem;
+    text-align: center; background: color-mix(in srgb, var(--nuit) 78%, transparent); padding: 1rem;
+  }
+  .accueil[hidden] { display: none; }
+  .accueil p { margin: 0; }
+  .record { color: var(--gris); font-size: var(--t-s); min-height: 1.5em; }
+  .aide-bas { color: var(--gris); font-size: var(--t-s); margin-top: 0.75rem; }
+  @media (max-width: 40rem) { .modes { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  type Mode = 'vitesse' | 'precision' | 'suivi';
+  interface Cible { x: number; y: number; r: number; vx: number; vy: number; }
+
+  const CONSIGNES: Record<Mode, string> = {
+    vitesse: 'Clique sur les 30 cibles le plus vite possible.',
+    precision: 'Touche un maximum de petites cibles en 30 secondes. Chaque tir manqué retire des points.',
+    suivi: 'Garde le curseur sur la cible mobile pendant 30 secondes.',
+  };
+  const DUREE = 30000;
+  const NB_VITESSE = 30;
+
+  const canvas = document.getElementById('terrain') as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+  const accueil = document.getElementById('accueil')!;
+  const btnDemarrer = document.getElementById('demarrer') as HTMLButtonElement;
+  const consigne = document.getElementById('consigne')!;
+  const ligneRecord = document.getElementById('record')!;
+  const hTemps = document.getElementById('h-temps')!;
+  const hScore = document.getElementById('h-score')!;
+  const hLibScore = document.getElementById('h-lib-score')!;
+  const hPrec = document.getElementById('h-prec')!;
+  const ambre = getComputedStyle(document.documentElement).getPropertyValue('--ambre').trim() || '#ffb224';
+
+  let mode: Mode = 'vitesse';
+  let actif = false;
+  let debut = 0;
+  let precedent = 0;
+  let touches = 0;
+  let tirs = 0;
+  let surCible = 0;
+  let echantillons = 0;
+  let cible: Cible | null = null;
+  let souris = { x: -1, y: -1 };
+  let dernierResultat = '';
+
+  const lireRecord = (m: Mode): number | null => {
+    try { const v = localStorage.getItem(`fragx.visee.${m}`); return v === null ? null : Number(v); } catch { return null; }
+  };
+  const ecrireRecord = (m: Mode, v: number) => {
+    try { localStorage.setItem(`fragx.visee.${m}`, String(v)); } catch { /* stockage indisponible */ }
+  };
+  const virgule = (n: number, d: number) => n.toFixed(d).replace('.', ',');
+  const points = () => Math.max(0, touches * 10 - (tirs - touches) * 5);
+  const precision = () => (tirs ? Math.round((touches / tirs) * 100) + ' %' : '--');
+
+  function texteRecord(m: Mode, v: number | null): string {
+    if (v === null) return 'Pas encore de record';
+    if (m === 'vitesse') return `Record : ${virgule(v / 1000, 2)} s`;
+    if (m === 'precision') return `Record : ${v} points`;
+    return `Record : ${v} % du temps sur la cible`;
+  }
+
+  function majAccueil() {
+    consigne.textContent = CONSIGNES[mode];
+    ligneRecord.textContent = (dernierResultat ? dernierResultat + '. ' : '') + texteRecord(mode, lireRecord(mode));
+    hLibScore.textContent = mode === 'suivi' ? 'Sur la cible' : mode === 'precision' ? 'Points' : 'Touches';
+  }
+
+  function dimensionner() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(canvas.clientWidth * dpr);
+    canvas.height = Math.round(canvas.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function nouvelleCible(): Cible {
+    const l = canvas.clientWidth, h = canvas.clientHeight;
+    const base = Math.min(l, h);
+    const r = mode === 'precision' ? base * 0.022 : mode === 'suivi' ? base * 0.05 : base * 0.04;
+    const marge = r + 40;
+    const angle = Math.random() * Math.PI * 2;
+    const vitesse = mode === 'suivi' ? base * 0.45 : 0;
+    return {
+      x: marge + Math.random() * (l - 2 * marge),
+      y: marge + Math.random() * (h - 2 * marge),
+      r,
+      vx: Math.cos(angle) * vitesse,
+      vy: Math.sin(angle) * vitesse,
+    };
+  }
+
+  function dessinerCible(c: Cible) {
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+    ctx.fillStyle = ambre;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r * 0.35, 0, Math.PI * 2);
+    ctx.fillStyle = '#1a1405';
+    ctx.fill();
+  }
+
+  function boucle(t: number) {
+    if (!actif) return;
+    const dt = precedent ? Math.min((t - precedent) / 1000, 0.1) : 0;
+    precedent = t;
+    const ecoule = t - debut;
+    const l = canvas.clientWidth, h = canvas.clientHeight;
+    ctx.clearRect(0, 0, l, h);
+
+    if (mode === 'suivi' && cible) {
+      cible.x += cible.vx * dt;
+      cible.y += cible.vy * dt;
+      if (cible.x < cible.r) { cible.x = cible.r; cible.vx = Math.abs(cible.vx); }
+      if (cible.x > l - cible.r) { cible.x = l - cible.r; cible.vx = -Math.abs(cible.vx); }
+      if (cible.y < cible.r + 30) { cible.y = cible.r + 30; cible.vy = Math.abs(cible.vy); }
+      if (cible.y > h - cible.r) { cible.y = h - cible.r; cible.vy = -Math.abs(cible.vy); }
+      if (Math.random() < dt * 0.8) {
+        const a = Math.random() * Math.PI * 2;
+        const v = Math.hypot(cible.vx, cible.vy);
+        cible.vx = Math.cos(a) * v;
+        cible.vy = Math.sin(a) * v;
+      }
+      echantillons++;
+      if (Math.hypot(souris.x - cible.x, souris.y - cible.y) <= cible.r) surCible++;
+      hScore.textContent = Math.round((surCible / echantillons) * 100) + ' %';
+    }
+    if (cible) dessinerCible(cible);
+
+    hTemps.textContent = mode === 'vitesse'
+      ? virgule(ecoule / 1000, 1)
+      : virgule(Math.max(0, (DUREE - ecoule) / 1000), 1);
+
+    if (mode !== 'vitesse' && ecoule >= DUREE) { terminer(false); return; }
+    requestAnimationFrame(boucle);
+  }
+
+  function demarrer() {
+    dimensionner();
+    actif = true;
+    touches = 0; tirs = 0; surCible = 0; echantillons = 0; precedent = 0;
+    debut = performance.now();
+    cible = nouvelleCible();
+    hScore.textContent = mode === 'suivi' ? '0 %' : mode === 'vitesse' ? `0/${NB_VITESSE}` : '0';
+    hPrec.textContent = '--';
+    accueil.hidden = true;
+    requestAnimationFrame(boucle);
+  }
+
+  function terminer(annule: boolean) {
+    actif = false;
+    cible = null;
+    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    const record = lireRecord(mode);
+    if (annule) {
+      dernierResultat = 'Exercice arrêté';
+    } else if (mode === 'vitesse') {
+      const temps = Math.round(performance.now() - debut);
+      dernierResultat = `${virgule(temps / 1000, 2)} s, précision ${precision()}`;
+      if (record === null || temps < record) { ecrireRecord(mode, temps); dernierResultat += ', nouveau record'; }
+    } else if (mode === 'precision') {
+      const p = points();
+      dernierResultat = `${p} points, ${touches} touches, précision ${precision()}`;
+      if (record === null || p > record) { ecrireRecord(mode, p); dernierResultat += ', nouveau record'; }
+    } else {
+      const pct = echantillons ? Math.round((surCible / echantillons) * 100) : 0;
+      dernierResultat = `${pct} % du temps sur la cible`;
+      if (record === null || pct > record) { ecrireRecord(mode, pct); dernierResultat += ', nouveau record'; }
+    }
+    btnDemarrer.textContent = 'Recommencer';
+    majAccueil();
+    accueil.hidden = false;
+    btnDemarrer.focus();
+  }
+
+  function position(e: PointerEvent) {
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  canvas.addEventListener('pointermove', (e) => { souris = position(e); });
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!actif || mode === 'suivi' || !cible) return;
+    const p = position(e);
+    tirs++;
+    if (Math.hypot(p.x - cible.x, p.y - cible.y) <= cible.r) {
+      touches++;
+      if (mode === 'vitesse' && touches >= NB_VITESSE) { terminer(false); return; }
+      cible = nouvelleCible();
+    }
+    hScore.textContent = mode === 'precision' ? String(points()) : `${touches}/${NB_VITESSE}`;
+    hPrec.textContent = precision();
+  });
+
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && actif) terminer(true); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && actif) terminer(true); });
+  btnDemarrer.addEventListener('click', demarrer);
+
+  for (const bouton of document.querySelectorAll<HTMLButtonElement>('[data-mode]')) {
+    bouton.addEventListener('click', () => {
+      if (actif) terminer(true);
+      mode = bouton.dataset.mode as Mode;
+      for (const b of document.querySelectorAll('[data-mode]')) b.setAttribute('aria-checked', String(b === bouton));
+      dernierResultat = '';
+      btnDemarrer.textContent = 'Commencer';
+      majAccueil();
+    });
+  }
+
+  majAccueil();
+</script>

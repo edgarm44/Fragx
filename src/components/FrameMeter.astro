@@ -1,0 +1,122 @@
+---
+// Mesure en direct de la cadence d'affichage du navigateur du visiteur.
+---
+<figure class="compteur panneau" data-compteur>
+  <div class="lignes">
+    <div>
+      <span class="chiffre grand" data-ips>--</span>
+      <span class="unite">images/s dans ton navigateur</span>
+    </div>
+    <dl>
+      <div><dt>Temps d'image</dt><dd class="chiffre" data-ms>--</dd></div>
+      <div><dt>Écran détecté</dt><dd class="chiffre" data-hz>--</dd></div>
+    </dl>
+  </div>
+  <canvas data-trace height="120" aria-hidden="true"></canvas>
+  <figcaption>
+    Mesuré en direct. Le navigateur est généralement limité à la fréquence de ton écran :
+    si ce chiffre est bas alors que ton écran monte plus haut, lance le <a href="/setup">diagnostic</a>.
+  </figcaption>
+</figure>
+
+<style>
+  .compteur { margin: 0; display: grid; gap: 1rem; }
+  .lignes { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: end; }
+  .grand { font-size: clamp(3.5rem, 9vw, 5.5rem); color: var(--ambre); display: block; }
+  .unite { color: var(--gris); font-size: var(--t-s); }
+  dl { margin: 0; display: grid; gap: 0.5rem; text-align: right; }
+  dt { color: var(--gris); font-size: var(--t-xs); }
+  dd { margin: 0; font-size: var(--t-xl); }
+  canvas { width: 100%; height: 120px; display: block; border-top: 1px solid var(--trait); }
+  figcaption { color: var(--gris); font-size: var(--t-s); }
+</style>
+
+<script>
+  const COURANTES = [50, 60, 75, 90, 100, 120, 144, 165, 170, 175, 180, 200, 240, 280, 300, 360, 480, 500, 540];
+
+  function arrondirFrequence(hz: number): number {
+    return COURANTES.reduce((a, b) => (Math.abs(b - hz) < Math.abs(a - hz) ? b : a));
+  }
+
+  function mediane(valeurs: number[]): number {
+    const t = [...valeurs].sort((a, b) => a - b);
+    return t[Math.floor(t.length / 2)] ?? 0;
+  }
+
+  for (const racine of document.querySelectorAll<HTMLElement>('[data-compteur]')) {
+    const ips = racine.querySelector<HTMLElement>('[data-ips]')!;
+    const ms = racine.querySelector<HTMLElement>('[data-ms]')!;
+    const hz = racine.querySelector<HTMLElement>('[data-hz]')!;
+    const canvas = racine.querySelector<HTMLCanvasElement>('[data-trace]')!;
+    const ctx = canvas.getContext('2d');
+    const mouvementReduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const style = getComputedStyle(document.documentElement);
+    const ambre = style.getPropertyValue('--ambre').trim() || '#ffb224';
+    const trait = style.getPropertyValue('--trait').trim() || '#333866';
+
+    const historique: number[] = [];
+    const MAX = 240;
+    let precedent = 0;
+    let dernierAffichage = 0;
+
+    function dessiner() {
+      if (!ctx) return;
+      const dpr = window.devicePixelRatio || 1;
+      const largeur = canvas.clientWidth;
+      const hauteur = canvas.clientHeight;
+      if (canvas.width !== Math.round(largeur * dpr)) {
+        canvas.width = Math.round(largeur * dpr);
+        canvas.height = Math.round(hauteur * dpr);
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, largeur, hauteur);
+      // Échelle verticale : 0 à 40 ms, repères à 16,7 ms (60 i/s) et 6,9 ms (144 i/s)
+      const echelle = (v: number) => hauteur - Math.min(v, 40) / 40 * (hauteur - 8) - 4;
+      ctx.strokeStyle = trait;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      for (const repere of [1000 / 60, 1000 / 144]) {
+        const y = Math.round(echelle(repere)) + 0.5;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(largeur, y); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.strokeStyle = ambre;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      const pas = largeur / (MAX - 1);
+      const debut = MAX - historique.length;
+      historique.forEach((v, i) => {
+        const x = (debut + i) * pas;
+        const y = echelle(v);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    function boucle(t: number) {
+      if (precedent) {
+        const delta = t - precedent;
+        if (delta < 250) {
+          historique.push(delta);
+          if (historique.length > MAX) historique.shift();
+        }
+      }
+      precedent = t;
+
+      if (t - dernierAffichage > 250 && historique.length > 20) {
+        dernierAffichage = t;
+        const recents = historique.slice(-60);
+        const med = mediane(recents);
+        ips.textContent = String(Math.round(1000 / med));
+        ms.textContent = med.toFixed(1).replace('.', ',') + ' ms';
+        hz.textContent = arrondirFrequence(1000 / med) + ' Hz';
+        if (mouvementReduit) dessiner();
+      }
+      if (!mouvementReduit) dessiner();
+      requestAnimationFrame(boucle);
+    }
+
+    document.addEventListener('visibilitychange', () => { precedent = 0; });
+    requestAnimationFrame(boucle);
+  }
+</script>

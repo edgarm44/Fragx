@@ -1,0 +1,35 @@
+---
+const annee = new Date().getFullYear();
+---
+<footer class="pied">
+  <div class="conteneur grille">
+    <p>
+      Fragx n'est affilié ni à Riot Games, ni à Epic Games, ni à Electronic Arts, ni à Activision.
+      Les noms des jeux appartiennent à leurs éditeurs respectifs.
+    </p>
+    <ul>
+      <li><a href="/mentions-legales">Mentions légales et confidentialité</a></li>
+      <li>© {annee} Fragx</li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .pied {
+    border-top: 1px solid var(--trait);
+    color: var(--gris);
+    font-size: var(--t-s);
+    padding-block: 2rem;
+    margin-top: 2rem;
+  }
+  .grille {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+  }
+  p { margin: 0; max-width: 60ch; }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  a { color: var(--gris); }
+  a:hover { color: var(--texte); }
+</style>

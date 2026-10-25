@@ -1,0 +1,120 @@
+---
+import Base from '../layouts/Base.astro';
+import FrameMeter from '../components/FrameMeter.astro';
+import { JEUX_COUVERTS } from '../data/jeux';
+
+const outils = [
+  {
+    href: '/setup',
+    nom: 'Diagnostic du setup',
+    texte: 'Détecte ce que ton navigateur peut lire de ton PC, complète le reste, et repère ce qui te freine : écran, RAM, souris, connexion.',
+    duree: '3 min',
+  },
+  {
+    href: '/benchmark',
+    nom: 'Benchmark navigateur',
+    texte: 'Charge ton processeur graphique par paliers jusqu\'à ce qu\'il décroche, et donne un score à comparer.',
+    duree: '1 min',
+  },
+  {
+    href: '/sensibilite',
+    nom: 'Convertisseur de sensibilité',
+    texte: 'Garde exactement la même visée en passant de Valorant à Apex ou à Fortnite, avec le cm/360 et l\'eDPI.',
+    duree: '30 s',
+  },
+  {
+    href: '/visee',
+    nom: 'Entraînement de visée',
+    texte: 'Trois exercices courts pour la vitesse, la précision et le suivi de cible. Tes records restent sur ton appareil.',
+    duree: '1 min par exercice',
+  },
+  {
+    href: '/guides',
+    nom: 'Guides',
+    texte: 'Réglages Windows, pilotes et paramètres en jeu expliqués simplement, jeu par jeu.',
+    duree: 'Lecture',
+  },
+];
+---
+<Base title="Fragx">
+  <section class="conteneur accroche">
+    <div class="texte">
+      <h1>Règle ton PC et ta visée avant la prochaine partie.</h1>
+      <p class="chapo">
+        Diagnostic du setup, test de performance, conversion de sensibilité et entraînement de visée.
+        Gratuit, sans compte, directement dans ton navigateur.
+      </p>
+      <div class="actions">
+        <a class="bouton bouton-principal" href="/setup">Diagnostiquer mon setup</a>
+        <a class="bouton bouton-secondaire" href="/benchmark">Lancer le benchmark</a>
+      </div>
+    </div>
+    <FrameMeter />
+  </section>
+
+  <section class="conteneur section" aria-labelledby="titre-outils">
+    <h2 id="titre-outils">Les outils</h2>
+    <ul class="outils">
+      {outils.map((o) => (
+        <li>
+          <a href={o.href}>
+            <span class="nom">{o.nom}</span>
+            <span class="desc">{o.texte}</span>
+            <span class="duree">{o.duree}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="conteneur section jeux" aria-labelledby="titre-jeux">
+    <h2 id="titre-jeux">Pensé pour</h2>
+    <p class="liste-jeux">{JEUX_COUVERTS.join(', ')}.</p>
+    <p class="chapo">
+      La recherche de statistiques par pseudo arrive dans une prochaine version,
+      en commençant par Fortnite, Apex Legends et Battlefield.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .accroche {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: clamp(1.5rem, 5vw, 4rem);
+    align-items: center;
+    padding-block: clamp(2.5rem, 8vw, 5.5rem) clamp(1.5rem, 4vw, 3rem);
+  }
+  .texte h1 { max-width: 14ch; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.75rem; }
+
+  .outils { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--trait); }
+  .outils a {
+    display: grid;
+    grid-template-columns: minmax(12rem, 16rem) 1fr auto;
+    gap: 0.25rem 2rem;
+    align-items: baseline;
+    padding: 1.25rem 0.25rem;
+    border-bottom: 1px solid var(--trait);
+    text-decoration: none;
+    color: var(--texte);
+  }
+  .outils a:hover { background: var(--plaque); }
+  .outils a:hover .nom { color: var(--ambre); }
+  .nom { font-family: var(--titre); font-size: var(--t-xl); font-weight: 600; }
+  .desc { color: var(--gris); max-width: 60ch; }
+  .duree { color: var(--gris); font-size: var(--t-s); white-space: nowrap; }
+
+  .liste-jeux {
+    font-family: var(--titre);
+    font-weight: 700;
+    font-size: clamp(var(--t-2xl), 4.5vw, var(--t-3xl));
+    line-height: 1.15;
+    max-width: 30ch;
+  }
+
+  @media (max-width: 52rem) {
+    .accroche { grid-template-columns: 1fr; }
+    .outils a { grid-template-columns: 1fr; }
+  }
+</style>

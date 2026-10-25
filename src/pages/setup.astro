@@ -1,0 +1,296 @@
+---
+import Base from '../layouts/Base.astro';
+import { JEUX_COUVERTS } from '../data/jeux';
+---
+<Base title="Diagnostic du setup" description="Repère ce qui limite ton PC de jeu : écran, mémoire, stockage, souris et connexion.">
+  <div class="conteneur en-tete-page">
+    <h1>Diagnostic du setup</h1>
+    <p class="chapo">
+      Ton navigateur peut lire une partie de ta configuration. Vérifie ces valeurs, complète le reste,
+      puis lance le diagnostic. Rien n'est envoyé : tout reste sur ton appareil.
+    </p>
+  </div>
+
+  <div class="conteneur disposition">
+    <form id="formulaire" class="panneau" novalidate>
+      <fieldset>
+        <legend>Détecté par le navigateur</legend>
+        <dl class="detecte">
+          <div><dt>Carte graphique utilisée</dt><dd data-det="gpu">Détection…</dd></div>
+          <div><dt>Threads processeur</dt><dd data-det="threads">…</dd></div>
+          <div><dt>Mémoire signalée</dt><dd data-det="ram">…</dd></div>
+          <div><dt>Définition de l'écran</dt><dd data-det="ecran">…</dd></div>
+          <div><dt>Fréquence mesurée</dt><dd data-det="hz">Mesure…</dd></div>
+        </dl>
+      </fieldset>
+
+      <fieldset>
+        <legend>À compléter</legend>
+        <div class="champs">
+          <div>
+            <label for="jeu">Jeu principal</label>
+            <select id="jeu" name="jeu">
+              {JEUX_COUVERTS.map((j) => <option>{j}</option>)}
+            </select>
+          </div>
+          <div>
+            <label for="gpu">Carte graphique <span class="aide">Ex. RTX 4060, RX 7800 XT</span></label>
+            <input id="gpu" name="gpu" autocomplete="off" />
+          </div>
+          <div>
+            <label for="cpu">Processeur <span class="aide">Ex. Ryzen 5 7600, Core i5-14600KF</span></label>
+            <input id="cpu" name="cpu" autocomplete="off" />
+          </div>
+          <div>
+            <label for="ram">Mémoire vive</label>
+            <select id="ram" name="ram">
+              <option value="8">8 Go ou moins</option>
+              <option value="16" selected>16 Go</option>
+              <option value="32">32 Go</option>
+              <option value="64">64 Go ou plus</option>
+            </select>
+          </div>
+          <div>
+            <label for="stockage">Disque où sont installés les jeux</label>
+            <select id="stockage" name="stockage">
+              <option value="hdd">Disque dur (HDD)</option>
+              <option value="sata">SSD SATA</option>
+              <option value="nvme" selected>SSD NVMe</option>
+            </select>
+          </div>
+          <div>
+            <label for="hz">Fréquence de l'écran <span class="aide">Celle indiquée par le fabricant</span></label>
+            <select id="hz" name="hz">
+              {[60, 75, 100, 120, 144, 165, 170, 180, 240, 280, 360, 480, 540].map((v) => (
+                <option value={v} selected={v === 144}>{v} Hz</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="dpi">DPI de la souris</label>
+            <input id="dpi" name="dpi" type="number" inputmode="numeric" min="100" max="32000" step="50" value="800" />
+          </div>
+          <div>
+            <label for="polling">Taux d'interrogation de la souris</label>
+            <select id="polling" name="polling">
+              {[125, 250, 500, 1000, 2000, 4000, 8000].map((v) => (
+                <option value={v} selected={v === 1000}>{v} Hz</option>
+              ))}
+              <option value="0">Je ne sais pas</option>
+            </select>
+          </div>
+          <div>
+            <label for="connexion">Connexion internet du PC</label>
+            <select id="connexion" name="connexion">
+              <option value="ethernet">Câble Ethernet</option>
+              <option value="wifi">Wi-Fi</option>
+              <option value="cpl">Boîtier CPL</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <button class="bouton bouton-principal" type="submit">Lancer le diagnostic</button>
+    </form>
+
+    <section id="resultats" class="resultats" aria-live="polite">
+      <h2>Résultats</h2>
+      <p class="vide">Remplis le formulaire et lance le diagnostic : les points à corriger apparaîtront ici, du plus important au moins important.</p>
+      <ol class="liste" hidden></ol>
+      <p class="note" hidden>
+        L'évaluation de la carte graphique et du processeur par modèle arrive avec la base de données matériel.
+        En attendant, compare ton score sur le <a href="/benchmark">benchmark</a>.
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .disposition {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+  fieldset { border: 0; margin: 0 0 1.5rem; padding: 0; }
+  legend { font-family: var(--titre); font-size: var(--t-xl); font-weight: 600; margin-bottom: 0.75rem; }
+  .detecte { display: grid; gap: 0.5rem; margin: 0; }
+  .detecte div { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--trait); padding-bottom: 0.5rem; }
+  .detecte dt { color: var(--gris); }
+  .detecte dd { margin: 0; text-align: right; font-weight: 500; overflow-wrap: anywhere; }
+  .champs { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .champs > div:first-child { grid-column: 1 / -1; }
+
+  .resultats { position: sticky; top: 5rem; }
+  .vide, .note { color: var(--gris); }
+  .liste { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: 0.75rem; }
+  .liste :global(li) {
+    border-left: 3px solid var(--gris);
+    background: var(--plaque);
+    padding: 0.85rem 1rem;
+    border-radius: 0 var(--rayon) var(--rayon) 0;
+  }
+  .liste :global(li[data-niveau='priorite']) { border-left-color: var(--alerte); }
+  .liste :global(li[data-niveau='ameliorer']) { border-left-color: var(--ambre); }
+  .liste :global(li[data-niveau='ok']) { border-left-color: var(--ok); }
+  .liste :global(strong) { display: block; font-weight: 600; }
+  .liste :global(.niveau) { font-size: var(--t-xs); color: var(--gris); }
+  .liste :global(p) { margin: 0.3rem 0 0; color: var(--gris); }
+
+  @media (max-width: 56rem) {
+    .disposition { grid-template-columns: 1fr; }
+    .resultats { position: static; }
+  }
+  @media (max-width: 34rem) {
+    .champs { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  type Niveau = 'priorite' | 'ameliorer' | 'ok' | 'info';
+  interface Constat { niveau: Niveau; titre: string; detail: string; }
+
+  const CLE = 'fragx.setup';
+  const form = document.getElementById('formulaire') as HTMLFormElement;
+  const det = (k: string) => document.querySelector<HTMLElement>(`[data-det="${k}"]`)!;
+  let hzMesure = 0;
+  let gpuDetecte = '';
+
+  // --- Détection navigateur ---------------------------------------------
+  function detecterGpu(): string {
+    try {
+      const c = document.createElement('canvas');
+      const gl = (c.getContext('webgl2') || c.getContext('webgl')) as WebGLRenderingContext | null;
+      if (!gl) return '';
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      const brut = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+      return nettoyerGpu(String(brut || ''));
+    } catch {
+      return '';
+    }
+  }
+
+  // « ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 (0x00002786) Direct3D11 vs_5_0 ps_5_0, D3D11) » -> « NVIDIA GeForce RTX 4070 »
+  function nettoyerGpu(s: string): string {
+    const angle = s.match(/^ANGLE \([^,]+,\s*(.+?)(?:\s*\(0x[0-9a-f]+\))?\s*(?:Direct3D|OpenGL|Vulkan|Metal|,)/i);
+    return (angle ? angle[1] : s).trim();
+  }
+
+  function mesurerFrequence(): Promise<number> {
+    return new Promise((resolve) => {
+      const deltas: number[] = [];
+      let prec = 0;
+      const pas = (t: number) => {
+        if (prec) deltas.push(t - prec);
+        prec = t;
+        if (deltas.length < 90) requestAnimationFrame(pas);
+        else {
+          deltas.sort((a, b) => a - b);
+          resolve(1000 / deltas[Math.floor(deltas.length / 2)]);
+        }
+      };
+      requestAnimationFrame(pas);
+    });
+  }
+
+  gpuDetecte = detecterGpu();
+  det('gpu').textContent = gpuDetecte || 'Non communiquée par le navigateur';
+  det('threads').textContent = navigator.hardwareConcurrency ? String(navigator.hardwareConcurrency) : 'Inconnu';
+  const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  det('ram').textContent = mem ? (mem >= 8 ? '8 Go ou plus (limite du navigateur)' : `${mem} Go`) : 'Non communiquée';
+  const dpr = window.devicePixelRatio || 1;
+  det('ecran').textContent = `${Math.round(screen.width * dpr)} × ${Math.round(screen.height * dpr)}`;
+  mesurerFrequence().then((hz) => {
+    hzMesure = hz;
+    det('hz').textContent = `${Math.round(hz)} Hz`;
+  });
+
+  // --- Sauvegarde locale -------------------------------------------------
+  function charger() {
+    let donnees: Record<string, string> = {};
+    try { donnees = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch { /* stockage indisponible */ }
+    for (const [k, v] of Object.entries(donnees)) {
+      const champ = form.elements.namedItem(k) as HTMLInputElement | HTMLSelectElement | null;
+      if (champ) champ.value = v;
+    }
+    const gpu = form.elements.namedItem('gpu') as HTMLInputElement;
+    if (!gpu.value && gpuDetecte && !/swiftshader|llvmpipe|basic render/i.test(gpuDetecte)) gpu.value = gpuDetecte;
+  }
+  function sauver(d: Record<string, string>) {
+    try { localStorage.setItem(CLE, JSON.stringify(d)); } catch { /* stockage indisponible */ }
+  }
+  charger();
+
+  // --- Règles de diagnostic ----------------------------------------------
+  function diagnostiquer(d: Record<string, string>): Constat[] {
+    const c: Constat[] = [];
+    const hz = Number(d.hz);
+    const ram = Number(d.ram);
+    const polling = Number(d.polling);
+    const dpi = Number(d.dpi);
+    const gpu = gpuDetecte.toLowerCase();
+
+    if (/swiftshader|llvmpipe|basic render/.test(gpu)) {
+      c.push({ niveau: 'priorite', titre: 'Accélération matérielle désactivée dans le navigateur', detail: 'Ton navigateur dessine sans carte graphique, ce qui fausse le benchmark. Active l\'accélération matérielle dans ses paramètres puis redémarre-le.' });
+    } else if (/intel\(r\) (uhd|hd|iris)|intel (uhd|hd|iris)|amd radeon\(tm\) graphics|radeon graphics$/.test(gpu)) {
+      c.push({ niveau: 'ameliorer', titre: 'Le navigateur utilise le GPU intégré', detail: 'Si ton PC a une carte graphique dédiée, vérifie dans Paramètres Windows > Affichage > Graphiques que tes jeux utilisent bien le mode « Hautes performances », et que l\'écran est branché sur la carte graphique et non sur la carte mère.' });
+    }
+
+    if (hz <= 60) c.push({ niveau: 'priorite', titre: 'Écran 60 Hz', detail: 'Passer à un écran 144 Hz ou plus est l\'amélioration la plus visible pour un jeu de tir : image plus fluide et cibles plus faciles à suivre.' });
+    else if (hz < 144) c.push({ niveau: 'ameliorer', titre: `Écran ${hz} Hz`, detail: 'Correct, mais 144 Hz ou plus reste la référence pour les FPS compétitifs.' });
+    else c.push({ niveau: 'ok', titre: `Écran ${hz} Hz`, detail: 'Fréquence adaptée aux jeux de tir. Vise des FPS en jeu au moins égaux à cette fréquence.' });
+
+    if (hzMesure && hz > 60 && hzMesure < hz * 0.8) {
+      c.push({ niveau: 'priorite', titre: `Ton écran semble tourner à ${Math.round(hzMesure)} Hz au lieu de ${hz} Hz`, detail: 'Vérifie Paramètres Windows > Affichage > Affichage avancé > Fréquence d\'actualisation, et utilise un câble DisplayPort ou HDMI compatible. Fais aussi la mesure navigateur en plein écran, sans autre programme lourd ouvert.' });
+    }
+
+    if (ram <= 8) c.push({ niveau: 'priorite', titre: '8 Go de mémoire vive', detail: 'Insuffisant pour les jeux récents : saccades et chargements longs. 16 Go en double canal (deux barrettes) est le minimum conseillé, 32 Go est confortable.' });
+    else if (ram === 16) c.push({ niveau: 'ok', titre: '16 Go de mémoire vive', detail: 'Suffisant pour la plupart des jeux. Vérifie qu\'il s\'agit de deux barrettes (double canal) et que le profil XMP ou EXPO est activé dans le BIOS.' });
+    else c.push({ niveau: 'ok', titre: `${ram} Go de mémoire vive`, detail: 'Confortable. Pense à activer le profil XMP ou EXPO dans le BIOS pour profiter de la fréquence prévue.' });
+
+    if (d.stockage === 'hdd') c.push({ niveau: 'priorite', titre: 'Jeux installés sur disque dur', detail: 'Les jeux récents chargent beaucoup plus vite sur SSD, et certains (textures, apparition dans les battle royale) saccadent sur disque dur. Un SSD NVMe de 1 To est un achat rentable.' });
+    else c.push({ niveau: 'ok', titre: d.stockage === 'nvme' ? 'SSD NVMe' : 'SSD SATA', detail: 'Stockage adapté.' });
+
+    if (polling && polling < 500) c.push({ niveau: 'ameliorer', titre: `Souris à ${polling} Hz`, detail: 'Monte le taux d\'interrogation à 1000 Hz dans le logiciel de ta souris : le mouvement sera plus régulier.' });
+    else if (polling >= 1000) c.push({ niveau: 'ok', titre: `Souris à ${polling} Hz`, detail: polling > 1000 ? 'Très élevé : si tu observes des micro-saccades, redescends à 1000 Hz, certains processeurs supportent mal les taux élevés.' : 'Réglage standard pour le jeu.' });
+    else if (polling === 0) c.push({ niveau: 'info', titre: 'Taux d\'interrogation inconnu', detail: 'Il se règle dans le logiciel du fabricant de la souris. 1000 Hz est la valeur conseillée.' });
+
+    if (dpi > 3200) c.push({ niveau: 'info', titre: `${dpi} DPI`, detail: 'Pas de problème en soi, mais la sensibilité en jeu sera très basse. La plupart des joueurs compétitifs jouent entre 400 et 1600 DPI. Calcule ton eDPI sur le convertisseur de sensibilité.' });
+
+    if (d.connexion === 'wifi') c.push({ niveau: 'ameliorer', titre: 'Connexion Wi-Fi', detail: 'Le Wi-Fi ajoute de la latence et surtout des variations (gigue). Un câble Ethernet reste la meilleure solution pour jouer en ligne.' });
+    else if (d.connexion === 'cpl') c.push({ niveau: 'ameliorer', titre: 'Boîtier CPL', detail: 'Souvent plus stable que le Wi-Fi mais sensible aux perturbations électriques. Un câble Ethernet direct reste préférable.' });
+    else c.push({ niveau: 'ok', titre: 'Connexion par câble', detail: 'La meilleure option pour jouer en ligne.' });
+
+    const ordre: Record<Niveau, number> = { priorite: 0, ameliorer: 1, info: 2, ok: 3 };
+    return c.sort((a, b) => ordre[a.niveau] - ordre[b.niveau]);
+  }
+
+  const LIBELLES: Record<Niveau, string> = { priorite: 'Priorité', ameliorer: 'À améliorer', info: 'À savoir', ok: 'Bon' };
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(form)) as Record<string, string>;
+    sauver(d);
+    const constats = diagnostiquer(d);
+    const liste = document.querySelector<HTMLOListElement>('#resultats .liste')!;
+    liste.replaceChildren(...constats.map((c) => {
+      const li = document.createElement('li');
+      li.dataset.niveau = c.niveau;
+      const niveau = document.createElement('span');
+      niveau.className = 'niveau';
+      niveau.textContent = LIBELLES[c.niveau];
+      const titre = document.createElement('strong');
+      titre.textContent = c.titre;
+      const detail = document.createElement('p');
+      detail.textContent = c.detail;
+      li.append(niveau, titre, detail);
+      return li;
+    }));
+    liste.hidden = false;
+    document.querySelector<HTMLElement>('#resultats .vide')!.hidden = true;
+    document.querySelector<HTMLElement>('#resultats .note')!.hidden = false;
+    if (window.matchMedia('(max-width: 56rem)').matches) {
+      document.getElementById('resultats')!.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+</script>

@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Mentions légales et confidentialité">
+  <article class="conteneur article">
+    <h1>Mentions légales et confidentialité</h1>
+
+    <h2>Éditeur du site</h2>
+    <p>[À compléter : nom et prénom ou raison sociale, adresse ou mention d'éditeur non professionnel, adresse e-mail de contact, directeur de la publication.]</p>
+
+    <h2>Hébergement</h2>
+    <p>[À compléter : nom, adresse et téléphone de l'hébergeur.]</p>
+
+    <h2>Données personnelles</h2>
+    <p>
+      Fragx ne demande aucun compte et ne collecte aucune donnée personnelle sur ses serveurs.
+      Les informations saisies dans les outils (configuration, sensibilité, scores et records) sont enregistrées
+      uniquement dans le stockage local de ton navigateur, sur ton appareil. Tu peux les effacer à tout moment
+      en supprimant les données du site dans les paramètres de ton navigateur.
+    </p>
+    <p>
+      Le site n'utilise ni cookie publicitaire, ni outil de mesure d'audience, ni police de caractères chargée
+      depuis un service tiers.
+    </p>
+
+    <h2>Marques</h2>
+    <p>
+      Valorant est une marque de Riot Games, Fortnite d'Epic Games, Apex Legends et Battlefield d'Electronic Arts,
+      Call of Duty d'Activision. Fragx est un projet indépendant, sans lien avec ces éditeurs.
+    </p>
+  </article>
+</Base>
+
+<style>
+  .article { padding-block: clamp(2rem, 6vw, 3.5rem); max-width: calc(68ch + 2 * var(--gouttiere)); }
+  h2 { font-size: var(--t-xl); margin-top: 2rem; }
+  p { color: #d6d5e6; }
+</style>

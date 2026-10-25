@@ -1,0 +1,140 @@
+---
+import Base from '../layouts/Base.astro';
+import { JEUX } from '../data/jeux';
+---
+<Base title="Convertisseur de sensibilité" description="Convertis ta sensibilité souris entre Valorant, Fortnite, Apex Legends, Call of Duty et Battlefield, avec le cm/360 et l'eDPI.">
+  <div class="conteneur en-tete-page">
+    <h1>Convertisseur de sensibilité</h1>
+    <p class="chapo">
+      Indique ta sensibilité dans un jeu : on calcule la valeur qui donne exactement la même rotation dans les autres.
+    </p>
+  </div>
+
+  <div class="conteneur disposition">
+    <form id="conv" class="panneau" novalidate>
+      <div>
+        <label for="source">Jeu de départ</label>
+        <select id="source" name="source">
+          {JEUX.map((j) => <option value={j.id}>{j.nom}</option>)}
+        </select>
+      </div>
+      <div>
+        <label for="sens">Sensibilité dans ce jeu <span class="aide" id="format"></span></label>
+        <input id="sens" name="sens" type="number" inputmode="decimal" step="any" min="0" value="0.4" />
+      </div>
+      <div>
+        <label for="dpi">DPI de la souris</label>
+        <input id="dpi" name="dpi" type="number" inputmode="numeric" step="50" min="50" value="800" />
+      </div>
+    </form>
+
+    <div>
+      <div class="mesures">
+        <div class="mesure">
+          <span class="chiffre" id="cm360">--</span>
+          <span class="libelle">cm pour un tour complet (cm/360)</span>
+        </div>
+        <div class="mesure">
+          <span class="chiffre" id="edpi">--</span>
+          <span class="libelle">eDPI dans le jeu de départ</span>
+        </div>
+      </div>
+
+      <table>
+        <caption class="visuellement-cache">Sensibilité équivalente par jeu</caption>
+        <thead><tr><th scope="col">Jeu</th><th scope="col">Sensibilité équivalente</th></tr></thead>
+        <tbody id="equivalences"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="conteneur section notes">
+    <h2>Bon à savoir</h2>
+    <p>
+      La conversion porte sur la visée sans zoom (hipfire). La visée avec lunette dépend du champ de vision
+      et des multiplicateurs propres à chaque jeu : règle-la ensuite dans le jeu.
+    </p>
+    <p>
+      Pour Fortnite, la valeur correspond au pourcentage des réglages « Sensibilité X » et « Sensibilité Y ».
+      Les valeurs de conversion de Battlefield 6 n'ont pas encore été vérifiées : celles affichées correspondent à Battlefield 2042.
+    </p>
+    <p>
+      Repères : la plupart des joueurs compétitifs de jeux tactiques (Valorant, Counter-Strike) jouent entre 25 et 50 cm/360 ;
+      les jeux plus rapides (Apex, Call of Duty, Fortnite) se jouent souvent un peu plus vite.
+    </p>
+  </div>
+</Base>
+
+<script define:vars={{ jeux: JEUX }}>
+  const CLE = 'fragx.sensibilite';
+  const form = document.getElementById('conv');
+  const source = form.elements.namedItem('source');
+  const sens = form.elements.namedItem('sens');
+  const dpi = form.elements.namedItem('dpi');
+
+  try {
+    const d = JSON.parse(localStorage.getItem(CLE) || '{}');
+    if (d.source) source.value = d.source;
+    if (d.sens) sens.value = d.sens;
+    if (d.dpi) dpi.value = d.dpi;
+  } catch (e) { /* stockage indisponible */ }
+
+  const nombre = (n, dec) => n.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+  function calculer() {
+    const jeu = jeux.find((j) => j.id === source.value);
+    document.getElementById('format').textContent = jeu.format;
+    const s = parseFloat(String(sens.value).replace(',', '.'));
+    const d = parseFloat(dpi.value);
+    const corps = document.getElementById('equivalences');
+    if (!(s > 0) || !(d > 0)) {
+      document.getElementById('cm360').textContent = '--';
+      document.getElementById('edpi').textContent = '--';
+      corps.replaceChildren();
+      return;
+    }
+    try { localStorage.setItem(CLE, JSON.stringify({ source: source.value, sens: sens.value, dpi: dpi.value })); } catch (e) { /* indisponible */ }
+
+    // Degrés par mouvement : s * yaw ; cm/360 = 360 / (s * yaw * dpi) * 2,54
+    const degresParPouce = s * jeu.yaw * d;
+    const cm360 = (360 / degresParPouce) * 2.54;
+    document.getElementById('cm360').textContent = nombre(cm360, 1);
+    document.getElementById('edpi').textContent = nombre(s * d, 0);
+
+    corps.replaceChildren(...jeux.filter((j) => j.id !== jeu.id).map((j) => {
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      th.scope = 'row';
+      th.textContent = j.nom;
+      const td = document.createElement('td');
+      const valeur = (s * jeu.yaw) / j.yaw;
+      td.textContent = nombre(valeur, j.decimales) + (j.id === 'fortnite' ? ' %' : '');
+      td.className = 'chiffre';
+      tr.append(th, td);
+      return tr;
+    }));
+  }
+
+  form.addEventListener('input', calculer);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  calculer();
+</script>
+
+<style>
+  .disposition {
+    display: grid;
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+  form { display: grid; gap: 1rem; }
+  .mesures { display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 1.5rem; }
+  .mesure { display: grid; gap: 0.25rem; }
+  .mesure .chiffre { font-size: var(--t-4xl); color: var(--ambre); }
+  .libelle { color: var(--gris); font-size: var(--t-s); }
+  tbody :global(th) { color: var(--texte); font-weight: 500; font-size: var(--t-m); }
+  tbody :global(td) { font-size: var(--t-xl); }
+  .notes h2 { font-size: var(--t-xl); }
+  .notes p { color: var(--gris); }
+  @media (max-width: 48rem) { .disposition { grid-template-columns: 1fr; } }
+</style>
