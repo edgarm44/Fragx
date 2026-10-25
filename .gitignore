@@ -30,3 +30,6 @@ desktop.ini
 
 # Archives temporaires
 *.tgz
+
+# Journal de publication
+publier.log
