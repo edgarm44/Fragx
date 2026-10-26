@@ -11,11 +11,11 @@ interface Props {
   anime?: boolean;
 }
 
-const { title, anime = false, description = 'Diagnostic du setup, benchmark, conversion de sensibilité et entraînement de visée pour les joueurs de FPS. Gratuit et sans compte.' } = Astro.props;
+const { title, anime = false, description = 'Fragx : outils gratuits pour les joueurs de FPS. Diagnostic du setup, benchmark, entraînement de visée à ta vraie sensibilité, réglages des pros. Sans compte.' } = Astro.props;
 const canonique = new URL(Astro.url.pathname.replace(/\/?$/, '/'), Astro.site).href;
 const image = new URL(lien('/og.png'), Astro.site).href;
 const estAccueil = title === 'Fragx';
-const pageTitle = title === 'Fragx' ? 'Fragx — progresse sur les jeux de tir' : `${title} — Fragx`;
+const pageTitle = title === 'Fragx' ? 'Fragx : outils gratuits pour progresser sur les jeux de tir (FPS)' : `${title} — Fragx`;
 ---
 <!doctype html>
 <html lang="fr">
@@ -41,6 +41,7 @@ const pageTitle = title === 'Fragx' ? 'Fragx — progresse sur les jeux de tir' 
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'Fragx',
+      alternateName: ['FragX', 'Fragx FPS'],
       url: canonique,
       inLanguage: 'fr-FR',
       description,
