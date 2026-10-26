@@ -3,13 +3,14 @@ import { lien } from '../../lib/lien';
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
-const guides = (await getCollection('guides')).sort((a, b) => b.data.misAJour.getTime() - a.data.misAJour.getTime());
+const ORDRE = ['Tous les jeux', 'Valorant', 'Fortnite', 'Apex Legends', 'Call of Duty', 'Battlefield'];
+const guides = (await getCollection('guides')).sort((a, b) => ORDRE.indexOf(a.data.jeu) - ORDRE.indexOf(b.data.jeu));
 const date = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
 <Base title="Guides" description="Guides pratiques pour optimiser ton PC et tes réglages sur les jeux de tir.">
   <div class="conteneur en-tete-page">
     <h1>Guides</h1>
-    <p class="chapo">Réglages système, pilotes et paramètres en jeu, expliqués simplement.</p>
+    <p class="chapo">Les meilleurs réglages graphiques jeu par jeu, et la préparation de Windows et des pilotes. Commence par le guide « Tous les jeux ».</p>
   </div>
   <div class="conteneur">
     <ul class="liste">
@@ -24,7 +25,6 @@ const date = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month:
         </li>
       ))}
     </ul>
-    <p class="suite">Prochains guides : réglages graphiques de Valorant, Fortnite et Apex Legends.</p>
   </div>
 </Base>
 

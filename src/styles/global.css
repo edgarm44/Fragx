@@ -323,3 +323,30 @@ th { color: var(--gris); font-weight: 500; font-size: var(--t-s); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* --- Notifications de badges ------------------------------------------- */
+#toasts {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  display: grid;
+  gap: 0.6rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+}
+.toast {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(120deg, rgb(255 46 151 / 0.95), rgb(139 92 255 / 0.95));
+  color: #fff;
+  text-decoration: none;
+  box-shadow: var(--lueur-magenta), 0 12px 30px rgb(0 0 0 / 0.4);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  animation: toast-entree 0.35s ease-out both;
+}
+.toast:hover { color: #fff; filter: brightness(1.08); }
+.toast strong { font-family: var(--titre); }
+.toast span { font-size: var(--t-s); opacity: 0.92; }
+.toast[data-sortie] { opacity: 0; transform: translateY(8px); transition: opacity 0.35s, transform 0.35s; }
+@keyframes toast-entree { from { opacity: 0; transform: translateY(12px); } }

@@ -148,6 +148,9 @@ import { JEUX_COUVERTS } from '../data/jeux';
 </style>
 
 <script>
+  import { marquer } from '../lib/historique';
+  import { verifierBadges } from '../lib/badges';
+
   type Niveau = 'priorite' | 'ameliorer' | 'ok' | 'info';
   interface Constat { niveau: Niveau; titre: string; detail: string; }
 
@@ -272,6 +275,8 @@ import { JEUX_COUVERTS } from '../data/jeux';
     e.preventDefault();
     const d = Object.fromEntries(new FormData(form)) as Record<string, string>;
     sauver(d);
+    marquer('setup');
+    verifierBadges();
     const constats = diagnostiquer(d);
     const liste = document.querySelector<HTMLOListElement>('#resultats .liste')!;
     liste.replaceChildren(...constats.map((c) => {

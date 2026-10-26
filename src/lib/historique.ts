@@ -2,7 +2,7 @@
  * Historique des scores, stocké uniquement dans le navigateur (localStorage).
  * Utilisé par l'entraînement de visée, le test de réflexes et la routine.
  */
-export type Exercice = 'vitesse' | 'precision' | 'suivi' | 'reflexes';
+export type Exercice = 'vitesse' | 'precision' | 'suivi' | 'flick' | 'micro' | 'strafe' | 'reflexes';
 export interface Entree { t: number; score: number; }
 export type Historique = Record<Exercice, Entree[]>;
 
@@ -14,11 +14,14 @@ export const PLUS_BAS_MEILLEUR: Record<Exercice, boolean> = {
   vitesse: true,
   precision: false,
   suivi: false,
+  flick: true,
+  micro: false,
+  strafe: false,
   reflexes: true,
 };
 
 function vide(): Historique {
-  return { vitesse: [], precision: [], suivi: [], reflexes: [] };
+  return { vitesse: [], precision: [], suivi: [], flick: [], micro: [], strafe: [], reflexes: [] };
 }
 
 export function lireHistorique(): Historique {
@@ -47,4 +50,15 @@ export function ajouter(exercice: Exercice, score: number): void {
 export function jour(t: number = Date.now()): string {
   const d = new Date(t);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Petits drapeaux « outil utilisé au moins une fois » (benchmark, diagnostic, ping…). */
+export function marquer(drapeau: string): void {
+  try {
+    const d = JSON.parse(localStorage.getItem('fragx.drapeaux') || '{}');
+    if (!d[drapeau]) { d[drapeau] = Date.now(); localStorage.setItem('fragx.drapeaux', JSON.stringify(d)); }
+  } catch { /* stockage indisponible */ }
+}
+export function drapeaux(): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem('fragx.drapeaux') || '{}') || {}; } catch { return {}; }
 }

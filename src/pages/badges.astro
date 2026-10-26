@@ -1,0 +1,114 @@
+---
+import Base from '../layouts/Base.astro';
+import { BADGES } from '../lib/badges';
+---
+<Base title="Badges et niveau" description="Tes badges débloqués et ton niveau sur Fragx, calculés à partir de tes scores enregistrés sur cet appareil.">
+  <div class="conteneur en-tete-page">
+    <h1>Badges et niveau</h1>
+    <p class="chapo">
+      Chaque exercice terminé rapporte de l'expérience, chaque badge en rapporte davantage.
+      Tout est calculé à partir des scores enregistrés dans ce navigateur, sans compte.
+    </p>
+  </div>
+
+  <div class="conteneur">
+    <section class="niveau panneau" aria-labelledby="t-niveau">
+      <div>
+        <h2 id="t-niveau" class="visuellement-cache">Ton niveau</h2>
+        <span class="libelle">Niveau</span>
+        <span class="chiffre grand" id="niveau">1</span>
+      </div>
+      <div class="jauge-bloc">
+        <div class="jauge" role="progressbar" aria-labelledby="t-niveau" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="jauge"><span id="jauge-rempli"></span></div>
+        <p class="libelle" id="xp-texte">--</p>
+      </div>
+      <dl>
+        <div><dt>Exercices terminés</dt><dd class="chiffre" id="s-total">0</dd></div>
+        <div><dt>Badges</dt><dd class="chiffre" id="s-badges">0/{BADGES.length}</dd></div>
+        <div><dt>Série de routine</dt><dd class="chiffre" id="s-serie">0</dd></div>
+      </dl>
+    </section>
+
+    <ul class="grille" id="grille">
+      {BADGES.map((b) => (
+        <li class="badge" data-badge={b.id}>
+          <svg class="embleme" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M24 3l18 10v22L24 45 6 35V13z" fill="none" stroke="currentColor" stroke-width="2.5" />
+            <path d="M24 14v8M24 26v8M14 24h8M26 24h8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+          </svg>
+          <div class="texte">
+            <h3>{b.nom}</h3>
+            <p>{b.description}</p>
+            <div class="mini-jauge"><span></span></div>
+            <span class="etat"></span>
+          </div>
+        </li>
+      ))}
+    </ul>
+    <p class="note">Les badges et le niveau restent sur cet appareil : effacer les données du site dans le navigateur les remet à zéro.</p>
+  </div>
+</Base>
+
+<style>
+  .niveau { display: grid; grid-template-columns: auto 1fr auto; gap: 2rem; align-items: center; margin-bottom: 2rem; }
+  .libelle { color: var(--gris); font-size: var(--t-s); display: block; }
+  .grand { font-size: var(--t-4xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
+  .jauge { height: 12px; background: rgb(51 38 107 / 0.7); transform: skewX(-20deg); overflow: hidden; }
+  .jauge span { display: block; height: 100%; width: 0; background: var(--degrade); box-shadow: var(--lueur-magenta); transition: width 0.6s ease-out; }
+  .jauge-bloc .libelle { margin-top: 0.5rem; }
+  dl { margin: 0; display: grid; grid-template-columns: repeat(3, auto); gap: 1.5rem; }
+  dt { color: var(--gris); font-size: var(--t-xs); }
+  dd { margin: 0; font-size: var(--t-xl); }
+
+  .grille { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 0.85rem; }
+  .badge {
+    display: grid; grid-template-columns: 3rem 1fr; gap: 0.9rem; align-items: start;
+    padding: 1rem; background: rgb(18 11 46 / 0.85); border: 1px solid var(--trait);
+    color: var(--gris);
+  }
+  .embleme { width: 3rem; height: 3rem; color: var(--trait); }
+  .badge h3 { font-size: var(--t-l); margin: 0 0 0.2rem; color: var(--gris); }
+  .badge p { margin: 0 0 0.6rem; font-size: var(--t-s); }
+  .mini-jauge { height: 4px; background: rgb(51 38 107 / 0.7); }
+  .mini-jauge span { display: block; height: 100%; width: 0; background: var(--violet); }
+  .etat { display: block; font-size: var(--t-xs); margin-top: 0.35rem; }
+  .badge[data-ok] { border-color: rgb(255 46 151 / 0.6); background: linear-gradient(140deg, rgb(255 46 151 / 0.14), rgb(18 11 46 / 0.9) 60%); }
+  .badge[data-ok] .embleme { color: var(--magenta); filter: drop-shadow(0 0 6px rgb(255 46 151 / 0.7)); }
+  .badge[data-ok] h3 { color: var(--texte); }
+  .badge[data-ok] .mini-jauge { display: none; }
+  .badge[data-ok] .etat { color: var(--ok); font-weight: 600; }
+  .note { color: var(--gris); font-size: var(--t-s); margin-top: 1.5rem; }
+  @media (max-width: 52rem) {
+    .niveau { grid-template-columns: auto 1fr; }
+    dl { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+
+<script>
+  import { BADGES, contexte, debloques, experience, niveau } from '../lib/badges';
+
+  const c = contexte();
+  const ok = debloques(c);
+  const xp = experience(c);
+  const n = niveau(xp);
+  const pct = Math.round(((xp - n.debut) / (n.suivant - n.debut)) * 100);
+
+  document.getElementById('niveau')!.textContent = String(n.niveau);
+  document.getElementById('xp-texte')!.textContent = `${xp} points d'expérience. Encore ${n.suivant - xp} pour le niveau ${n.niveau + 1}.`;
+  const jauge = document.getElementById('jauge')!;
+  jauge.setAttribute('aria-valuenow', String(pct));
+  requestAnimationFrame(() => { document.getElementById('jauge-rempli')!.style.width = `${pct}%`; });
+  document.getElementById('s-total')!.textContent = String(c.total);
+  document.getElementById('s-badges')!.textContent = `${ok.size}/${BADGES.length}`;
+  document.getElementById('s-serie')!.textContent = `${c.serie} j`;
+
+  for (const b of BADGES) {
+    const li = document.querySelector<HTMLElement>(`[data-badge="${b.id}"]`)!;
+    const [v, o] = b.progres(c);
+    const fait = v >= o;
+    li.toggleAttribute('data-ok', fait);
+    li.querySelector<HTMLElement>('.mini-jauge span')!.style.width = `${Math.min(100, (v / o) * 100)}%`;
+    li.querySelector('.etat')!.textContent = fait ? 'Débloqué' : (o > 1 ? `${Math.min(v, o)} / ${o}` : 'À débloquer');
+  }
+  try { localStorage.setItem('fragx.badges.vus', JSON.stringify([...ok])); } catch { /* indisponible */ }
+</script>

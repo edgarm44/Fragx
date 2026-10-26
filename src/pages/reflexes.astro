@@ -106,6 +106,7 @@ import Base from '../layouts/Base.astro';
 
 <script>
   import { ajouter, lireHistorique } from '../lib/historique';
+  import { verifierBadges } from '../lib/badges';
 
   const NB_ESSAIS = 5;
   const zone = document.getElementById('zone') as HTMLButtonElement;
@@ -166,6 +167,7 @@ import Base from '../layouts/Base.astro';
     document.getElementById('meilleur')!.textContent = ms(meilleur);
     document.getElementById('record')!.textContent = ms(record);
     resultat.hidden = false;
+    verifierBadges();
     afficher('fin', ms(moyenne), `${niveau(moyenne)}. Clique pour une nouvelle série.`);
   }
 

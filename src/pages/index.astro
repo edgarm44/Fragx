@@ -8,6 +8,7 @@ import { JEUX_COUVERTS } from '../data/jeux';
 const accroches: Record<string, string> = {
   materiel: 'Ton PC tient-il la cadence ?',
   visee: 'Ta main est-elle prête ?',
+  progression: 'Reviens chaque jour',
   apprendre: 'Ce que font les meilleurs',
 };
 ---
@@ -91,6 +92,7 @@ const accroches: Record<string, string> = {
   }
   .categorie[data-cat='materiel'] h2 { color: var(--cyan); text-shadow: var(--lueur-cyan); }
   .categorie[data-cat='visee'] h2 { color: var(--magenta); text-shadow: var(--lueur-magenta); }
+  .categorie[data-cat='progression'] h2 { color: var(--ok); text-shadow: 0 0 14px rgb(61 252 176 / 0.55); }
   .categorie[data-cat='apprendre'] h2 { color: #b79bff; text-shadow: 0 0 14px rgb(139 92 255 / 0.6); }
   .categorie header p { color: var(--gris); margin: 0; }
 

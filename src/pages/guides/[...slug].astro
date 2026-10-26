@@ -28,8 +28,13 @@ const date = guide.data.misAJour.toLocaleDateString('fr-FR', { day: 'numeric', m
   .article h1 { max-width: 20ch; }
   .retour { font-size: var(--t-s); }
   .meta { color: var(--gris); }
-  .contenu { max-width: 68ch; margin-top: 2rem; }
+  .contenu { max-width: 48rem; margin-top: 2rem; }
+  .contenu :global(p), .contenu :global(ul) { max-width: 68ch; }
   .contenu :global(h2) { font-size: var(--t-xl); margin-top: 2.25rem; }
   .contenu :global(p), .contenu :global(li) { color: #d6d5e6; }
   .contenu :global(strong) { color: var(--texte); }
+  .contenu :global(table) { margin: 1rem 0 1.5rem; font-size: var(--t-s); display: block; overflow-x: auto; }
+  .contenu :global(th) { color: var(--cyan); font-family: var(--titre); }
+  .contenu :global(td:first-child) { color: var(--texte); font-weight: 500; }
+  .contenu :global(td) { vertical-align: top; color: #d6d5e6; }
 </style>

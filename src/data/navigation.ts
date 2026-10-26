@@ -26,10 +26,19 @@ export const CATEGORIES: Categorie[] = [
     id: 'visee',
     nom: 'Visée',
     outils: [
-      { href: '/visee', nom: 'Entraînement de visée', court: 'Entraînement', texte: 'Vitesse, précision et suivi de cible. Tes records restent sur ton appareil.', duree: '1 min par exercice' },
+      { href: '/visee', nom: 'Entraînement de visée', court: 'Entraînement', texte: 'Six exercices joués à ta vraie sensibilité de jeu, souris capturée comme en partie.', duree: '1 min par exercice' },
       { href: '/reflexes', nom: 'Test de réflexes', court: 'Réflexes', texte: 'Clique dès que l\'écran change : temps de réaction moyen sur 5 essais.', duree: '1 min' },
-      { href: '/routine', nom: 'Routine d\'entraînement', court: 'Routine', texte: 'Un programme de 15 minutes par jour et le suivi de ta progression.', duree: '15 min' },
       { href: '/sensibilite', nom: 'Convertisseur de sensibilité', court: 'Sensibilité', texte: 'La même visée d\'un jeu à l\'autre, avec le cm/360 et l\'eDPI.', duree: '30 s' },
+      { href: '/reticule', nom: 'Éditeur de réticule', court: 'Réticule', texte: 'Crée ton réticule Valorant, vois-le sur différents fonds et copie le code dans le jeu.', duree: '2 min' },
+    ],
+  },
+  {
+    id: 'progression',
+    nom: 'Progression',
+    outils: [
+      { href: '/defi', nom: 'Défi du jour', court: 'Défi du jour', texte: 'Un exercice imposé chaque jour, avec les mêmes cibles pour tous les joueurs.', duree: '1 min' },
+      { href: '/routine', nom: 'Routine d\'entraînement', court: 'Routine', texte: 'Un programme de 15 minutes par jour et le suivi de ta progression.', duree: '15 min' },
+      { href: '/badges', nom: 'Badges et niveau', court: 'Badges et niveau', texte: 'Tes objectifs débloqués, ta progression et ton niveau, sans compte.', duree: 'Consultation' },
     ],
   },
   {
@@ -37,7 +46,7 @@ export const CATEGORIES: Categorie[] = [
     nom: 'Apprendre',
     outils: [
       { href: '/pros', nom: 'Réglages des pros', court: 'Réglages des pros', texte: 'Sensibilité, DPI et souris de joueurs professionnels, comparables avec les tiens.', duree: 'Consultation' },
-      { href: '/guides', nom: 'Guides', court: 'Guides', texte: 'Réglages Windows, pilotes et paramètres en jeu, expliqués simplement.', duree: 'Lecture' },
+      { href: '/guides', nom: 'Guides', court: 'Guides', texte: 'Les meilleurs réglages graphiques jeu par jeu, Windows et pilotes, expliqués simplement.', duree: 'Lecture' },
     ],
   },
 ];

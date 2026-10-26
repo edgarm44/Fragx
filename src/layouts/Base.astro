@@ -12,6 +12,9 @@ interface Props {
 }
 
 const { title, anime = false, description = 'Diagnostic du setup, benchmark, conversion de sensibilité et entraînement de visée pour les joueurs de FPS. Gratuit et sans compte.' } = Astro.props;
+const canonique = new URL(Astro.url.pathname.replace(/\/?$/, '/'), Astro.site).href;
+const image = new URL(lien('/og.png'), Astro.site).href;
+const estAccueil = title === 'Fragx';
 const pageTitle = title === 'Fragx' ? 'Fragx — progresse sur les jeux de tir' : `${title} — Fragx`;
 ---
 <!doctype html>
@@ -21,10 +24,27 @@ const pageTitle = title === 'Fragx' ? 'Fragx — progresse sur les jeux de tir' 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href={lien('/favicon.svg')} />
-    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <link rel="canonical" href={canonique} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonique} />
+    <meta property="og:site_name" content="Fragx" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={image} />
+    <link rel="sitemap" href={lien('/sitemap.xml')} />
+    {estAccueil && <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Fragx',
+      url: canonique,
+      inLanguage: 'fr-FR',
+      description,
+    })} />}
     <meta name="theme-color" content="#0b0620" />
     <title>{pageTitle}</title>
   </head>

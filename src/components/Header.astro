@@ -22,6 +22,10 @@ const estActif = (href: string) => chemin === href || chemin.startsWith(href + '
       <span>Fragx</span>
     </a>
 
+    <a class="niveau-pastille" id="niveau-pastille" href={lien('/badges')} hidden>
+      <span class="visuellement-cache">Ton niveau : </span><span id="niveau-num">1</span>
+    </a>
+
     <button class="burger" type="button" aria-expanded="false" aria-controls="menu-principal">
       <span class="visuellement-cache">Menu</span>
       <span class="trait" aria-hidden="true"></span>
@@ -116,9 +120,22 @@ const estActif = (href: string) => chemin === href || chemin.startsWith(href + '
   .sous-menu .nom { font-family: var(--titre); font-weight: 600; }
   .sous-menu .desc { font-size: var(--t-xs); color: var(--gris); line-height: 1.4; }
 
-  .burger { display: none; }
+  .niveau-pastille {
+    order: 3;
+    display: inline-grid; place-items: center;
+    min-width: 2.4rem; height: 2.4rem; padding: 0 0.5rem;
+    font: 700 var(--t-s)/1 var(--titre); color: #04121a; text-decoration: none;
+    background: var(--cyan); box-shadow: var(--lueur-cyan);
+    clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  }
+  .niveau-pastille[hidden] { display: none; }
+  .niveau-pastille:hover { color: #04121a; filter: brightness(1.1); }
+  #niveau-num::before { content: 'Niv. '; font-weight: 600; }
+  .menu { order: 2; margin-left: auto; }
+  .burger { display: none; order: 4; }
 
   @media (max-width: 52rem) {
+    .niveau-pastille { margin-left: auto; }
     .burger {
       display: inline-grid; place-items: center;
       width: 2.75rem; height: 2.75rem;
@@ -172,6 +189,19 @@ const estActif = (href: string) => chemin === href || chemin.startsWith(href + '
     fermer();
     ouvert?.focus();
   });
+
+  // Pastille de niveau (calculée à partir des scores enregistrés sur cet appareil)
+  import { contexte, experience, niveau } from '../lib/badges';
+  function majNiveau() {
+    try {
+      const c = contexte();
+      if (!c.total) return;
+      document.getElementById('niveau-num')!.textContent = String(niveau(experience(c)).niveau);
+      document.getElementById('niveau-pastille')!.hidden = false;
+    } catch { /* stockage indisponible */ }
+  }
+  majNiveau();
+  document.addEventListener('fragx:progression', majNiveau);
 
   const burger = document.querySelector<HTMLButtonElement>('.burger');
   const menu = document.getElementById('menu-principal');

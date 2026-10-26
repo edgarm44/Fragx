@@ -86,6 +86,9 @@ import Base from '../layouts/Base.astro';
 </style>
 
 <script>
+  import { marquer } from '../lib/historique';
+  import { verifierBadges } from '../lib/badges';
+
   const CLE_RECORD = 'fragx.benchmark.record';
   const DUREE_PALIER = 4000;      // ms mesurées par palier
   const CHAUFFE = 600;            // ms ignorées au début de chaque palier
@@ -305,6 +308,7 @@ import Base from '../layouts/Base.astro';
     }
     if (annule) ligneRecord.textContent = 'Test arrêté avant la fin : score partiel, non enregistré.';
     document.getElementById('resultat')!.hidden = false;
+    if (!annule) { marquer('benchmark'); verifierBadges(); }
   }
 
   btnLancer.addEventListener('click', lancer);

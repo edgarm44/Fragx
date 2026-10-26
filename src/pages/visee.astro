@@ -1,28 +1,73 @@
 ---
 import Base from '../layouts/Base.astro';
+import { lien } from '../lib/lien';
+import { EXERCICES } from '../lib/exercices';
+import { JEUX } from '../data/jeux';
 ---
-<Base title="Entraînement de visée" description="Trois exercices de visée dans le navigateur : vitesse, précision et suivi de cible. Records enregistrés sur ton appareil.">
+<Base title="Entraînement de visée" description="Aim trainer dans le navigateur à ta vraie sensibilité de jeu : vitesse, précision, suivi, flick, micro-ajustements et strafe.">
   <div class="conteneur en-tete-page">
     <h1>Entraînement de visée</h1>
     <p class="chapo">
-      Choisis un exercice et clique sur Commencer. Tes records restent sur cet appareil.
+      Six exercices, joués à ta vraie sensibilité : un mouvement de souris tourne la vue exactement comme dans ton jeu.
+      Tes records restent sur cet appareil.
     </p>
   </div>
 
   <div class="conteneur">
-    <div class="modes" role="radiogroup" aria-label="Exercice">
-      <button type="button" role="radio" aria-checked="true" data-mode="vitesse">
-        <strong>Vitesse</strong><span>30 cibles, le plus vite possible</span>
-      </button>
-      <button type="button" role="radio" aria-checked="false" data-mode="precision">
-        <strong>Précision</strong><span>Petites cibles pendant 30 secondes</span>
-      </button>
-      <button type="button" role="radio" aria-checked="false" data-mode="suivi">
-        <strong>Suivi</strong><span>Garde le curseur sur la cible mobile</span>
-      </button>
+    <p class="bandeau-defi" id="bandeau-defi" hidden></p>
+
+    <div class="modes" role="radiogroup" aria-label="Exercice" id="modes">
+      {EXERCICES.map((e, i) => (
+        <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} data-mode={e.id}>
+          <strong>{e.nom}</strong><span>{e.resume}</span>
+        </button>
+      ))}
     </div>
 
-    <div class="arene">
+    <details class="reglages" id="reglages">
+      <summary>
+        <span class="titre-reglages">Ta sensibilité</span>
+        <span class="resume-reglages" id="resume-reglages"></span>
+      </summary>
+      <div class="champs">
+        <div>
+          <label for="r-jeu">Jeu</label>
+          <select id="r-jeu">
+            {JEUX.map((j) => <option value={j.id}>{j.nom}</option>)}
+          </select>
+        </div>
+        <div>
+          <label for="r-sens">Sensibilité en jeu</label>
+          <input id="r-sens" type="number" inputmode="decimal" step="any" min="0" />
+        </div>
+        <div>
+          <label for="r-dpi">DPI de la souris</label>
+          <input id="r-dpi" type="number" inputmode="numeric" step="50" min="50" />
+        </div>
+        <div>
+          <label for="r-fov">Champ de vision horizontal</label>
+          <select id="r-fov">
+            <option value="90">90°</option>
+            <option value="103">103° (Valorant)</option>
+            <option value="110">110°</option>
+            <option value="120">120°</option>
+          </select>
+        </div>
+        <fieldset class="choix-mode">
+          <legend>Contrôle</legend>
+          <label><input type="radio" name="r-controle" value="capture" /> Comme en jeu <span class="aide">La souris est capturée, Échap pour la libérer</span></label>
+          <label><input type="radio" name="r-controle" value="curseur" /> Curseur libre <span class="aide">Pour le tactile ou si la capture ne marche pas</span></label>
+        </fieldset>
+        <label class="case-son"><input type="checkbox" id="r-son" /> Sons de tir et de touche</label>
+      </div>
+      <p class="aide-sensi">
+        Pour une rotation exacte, utilise Chrome ou Edge : ils lisent les mouvements bruts de la souris.
+        Sur les autres navigateurs, laisse la vitesse du pointeur Windows au milieu (6/11) et décoche « Améliorer la précision du pointeur ».
+        Tu peux aussi récupérer ta sensibilité depuis le <a href={lien('/sensibilite')}>convertisseur</a>.
+      </p>
+    </details>
+
+    <div class="terrain-jeu" id="terrain-jeu">
       <canvas id="terrain" aria-label="Zone d'entraînement"></canvas>
       <div class="hud">
         <span><span class="libelle">Temps</span> <span class="chiffre" id="h-temps">--</span></span>
@@ -33,256 +78,530 @@ import Base from '../layouts/Base.astro';
         <p id="consigne"></p>
         <button class="bouton bouton-principal" id="demarrer" type="button">Commencer</button>
         <p class="record" id="record"></p>
+        <p class="indication" id="indication"></p>
       </div>
     </div>
-    <p class="aide-bas">Utilise la même souris et le même DPI qu'en jeu. Échap pour arrêter.</p>
   </div>
 </Base>
 
 <style>
-  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+  .bandeau-defi {
+    margin: 0 0 1rem; padding: 0.75rem 1rem;
+    background: linear-gradient(100deg, rgb(255 46 151 / 0.22), rgb(139 92 255 / 0.12));
+    border-left: 3px solid var(--magenta);
+    font-weight: 500;
+  }
+  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; margin-bottom: 1rem; }
   .modes button {
-    text-align: left; background: var(--plaque); color: var(--texte);
+    text-align: left; background: rgb(21 13 54 / 0.85); color: var(--texte);
     border: 1px solid var(--trait); border-radius: var(--rayon);
-    padding: 0.8rem 1rem; font: inherit; cursor: pointer; display: grid; gap: 0.15rem;
+    padding: 0.7rem 0.95rem; font: inherit; cursor: pointer; display: grid; gap: 0.1rem;
   }
   .modes button strong { font-family: var(--titre); font-size: var(--t-l); font-weight: 600; }
   .modes button span { color: var(--gris); font-size: var(--t-s); }
+  .modes button:hover { border-color: var(--violet); }
   .modes button[aria-checked='true'] { border-color: var(--magenta); box-shadow: inset 0 0 0 1px var(--magenta), 0 0 18px rgb(255 46 151 / 0.25); }
-  .arene {
+  .modes[data-verrou] button:not([aria-checked='true']) { opacity: 0.45; pointer-events: none; }
+
+  .reglages { margin-bottom: 1rem; border: 1px solid var(--trait); background: rgb(18 11 46 / 0.85); border-radius: var(--rayon); }
+  .reglages summary { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; align-items: baseline; padding: 0.8rem 1rem; cursor: pointer; }
+  .titre-reglages { font-family: var(--titre); font-weight: 700; }
+  .resume-reglages { color: var(--gris); font-size: var(--t-s); }
+  .champs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; padding: 0 1rem 1rem; }
+  .choix-mode { grid-column: span 3; border: 0; margin: 0; padding: 0; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .choix-mode legend { font-weight: 500; margin-bottom: 0.3rem; }
+  .choix-mode label, .case-son { display: flex; gap: 0.5rem; align-items: baseline; font-weight: 500; margin: 0; }
+  .choix-mode input, .case-son input { width: auto; accent-color: var(--magenta); }
+  .choix-mode .aide { display: inline; }
+  .case-son { align-self: end; }
+  .aide-sensi { color: var(--gris); font-size: var(--t-s); padding: 0 1rem 1rem; margin: 0; max-width: none; }
+
+  .terrain-jeu {
     position: relative; aspect-ratio: 16 / 9; min-height: 18rem;
-    border: 1px solid var(--trait); border-radius: var(--rayon); overflow: hidden;
-    background:
-      linear-gradient(rgb(139 92 255 / 0.16) 1px, transparent 1px) 0 0 / 48px 48px,
-      linear-gradient(90deg, rgb(139 92 255 / 0.16) 1px, transparent 1px) 0 0 / 48px 48px,
-      radial-gradient(ellipse at 50% 120%, rgb(255 46 151 / 0.18), transparent 60%),
-      #0a0520;
+    border: 1px solid var(--trait); overflow: hidden;
+    background: radial-gradient(ellipse at 50% 40%, #1a1046, #070313 75%);
   }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+  .terrain-jeu[data-curseur] canvas { cursor: none; }
   .hud { position: absolute; top: 0.6rem; left: 0.75rem; right: 0.75rem; display: flex; gap: 1.5rem; pointer-events: none; }
   .hud .chiffre { font-size: var(--t-xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
   .libelle { color: var(--gris); font-size: var(--t-xs); }
   .accueil {
     position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 0.75rem;
-    text-align: center; background: color-mix(in srgb, var(--fond) 78%, transparent); padding: 1rem;
+    text-align: center; background: rgb(7 3 19 / 0.78); padding: 1rem;
   }
   .accueil[hidden] { display: none; }
-  .accueil p { margin: 0; }
+  .accueil p { margin: 0; max-width: 46ch; }
   .record { color: var(--gris); font-size: var(--t-s); min-height: 1.5em; }
-  .aide-bas { color: var(--gris); font-size: var(--t-s); margin-top: 0.75rem; }
-  @media (max-width: 40rem) { .modes { grid-template-columns: 1fr; } }
+  .indication { color: var(--gris); font-size: var(--t-xs); }
+
+  @media (max-width: 60rem) { .champs { grid-template-columns: 1fr 1fr; } .choix-mode { grid-column: 1 / -1; } }
+  @media (max-width: 40rem) { .modes { grid-template-columns: 1fr 1fr; } .champs { grid-template-columns: 1fr; } }
 </style>
 
 <script>
-  import { ajouter } from '../lib/historique';
+  import { ajouter, jour } from '../lib/historique';
+  import { EXERCICES, exercice, type DefExercice, type Mode } from '../lib/exercices';
+  import { defiDu, enregistrerDefi } from '../lib/defi';
+  import { generateur } from '../lib/aleatoire';
+  import { sonTir, sonTouche, preparerSon, sonActif, reglerSon } from '../lib/son';
+  import { verifierBadges } from '../lib/badges';
+  import { JEUX } from '../data/jeux';
 
-  type Mode = 'vitesse' | 'precision' | 'suivi';
-  interface Cible { x: number; y: number; r: number; vx: number; vy: number; }
+  // ---------------------------------------------------------------------
+  // Réglages
+  // ---------------------------------------------------------------------
+  interface Reglages { jeu: string; sens: number; dpi: number; fov: number; controle: 'capture' | 'curseur'; }
+  const CLE_REGLAGES = 'fragx.visee.reglages';
+  const tactile = window.matchMedia('(pointer: coarse)').matches || !('requestPointerLock' in HTMLElement.prototype);
 
-  const CONSIGNES: Record<Mode, string> = {
-    vitesse: 'Clique sur les 30 cibles le plus vite possible.',
-    precision: 'Touche un maximum de petites cibles en 30 secondes. Chaque tir manqué retire des points.',
-    suivi: 'Garde le curseur sur la cible mobile pendant 30 secondes.',
-  };
-  const DUREE = 30000;
-  const NB_VITESSE = 30;
+  function chargerReglages(): Reglages {
+    const defaut: Reglages = { jeu: 'valorant', sens: 0.4, dpi: 800, fov: 103, controle: tactile ? 'curseur' : 'capture' };
+    try {
+      const conv = JSON.parse(localStorage.getItem('fragx.sensibilite') || '{}');
+      if (conv.source && JEUX.some((j) => j.id === conv.source)) { defaut.jeu = conv.source; defaut.sens = parseFloat(String(conv.sens).replace(',', '.')) || defaut.sens; defaut.dpi = Number(conv.dpi) || defaut.dpi; }
+      const r = JSON.parse(localStorage.getItem(CLE_REGLAGES) || '{}');
+      return { ...defaut, ...r, controle: tactile ? 'curseur' : (r.controle ?? defaut.controle) };
+    } catch {
+      return defaut;
+    }
+  }
+  let reglages = chargerReglages();
+  const eJeu = document.getElementById('r-jeu') as HTMLSelectElement;
+  const eSens = document.getElementById('r-sens') as HTMLInputElement;
+  const eDpi = document.getElementById('r-dpi') as HTMLInputElement;
+  const eFov = document.getElementById('r-fov') as HTMLSelectElement;
+  const eSon = document.getElementById('r-son') as HTMLInputElement;
+  const radios = [...document.querySelectorAll<HTMLInputElement>('input[name="r-controle"]')];
 
+  function afficherReglages() {
+    eJeu.value = reglages.jeu;
+    eSens.value = String(reglages.sens);
+    eDpi.value = String(reglages.dpi);
+    eFov.value = String(reglages.fov);
+    radios.forEach((r) => { r.checked = r.value === reglages.controle; r.disabled = tactile && r.value === 'capture'; });
+    eSon.checked = sonActif();
+    resumer();
+  }
+  const yawJeu = () => JEUX.find((j) => j.id === reglages.jeu)?.yaw ?? 0.07;
+  function resumer() {
+    const j = JEUX.find((x) => x.id === reglages.jeu)!;
+    const cm = (360 / (reglages.sens * j.yaw * reglages.dpi)) * 2.54;
+    const sens = j.id === 'fortnite' ? `${reglages.sens} %` : String(reglages.sens).replace('.', ',');
+    document.getElementById('resume-reglages')!.textContent =
+      `${j.nom}, ${sens} à ${reglages.dpi} DPI, soit ${Number.isFinite(cm) ? cm.toFixed(1).replace('.', ',') : '--'} cm pour un tour, ${reglages.controle === 'capture' ? 'souris capturée' : 'curseur libre'}`;
+  }
+  function lireChamps() {
+    const sens = parseFloat(eSens.value.replace(',', '.'));
+    const dpi = parseFloat(eDpi.value);
+    reglages = {
+      jeu: eJeu.value,
+      sens: sens > 0 ? sens : reglages.sens,
+      dpi: dpi > 0 ? dpi : reglages.dpi,
+      fov: Number(eFov.value) || 103,
+      controle: (radios.find((r) => r.checked)?.value as Reglages['controle']) ?? reglages.controle,
+    };
+    try { localStorage.setItem(CLE_REGLAGES, JSON.stringify(reglages)); } catch { /* indisponible */ }
+    reglerSon(eSon.checked);
+    resumer();
+    majAccueil();
+  }
+  document.getElementById('reglages')!.addEventListener('change', lireChamps);
+  afficherReglages();
+
+  // ---------------------------------------------------------------------
+  // Géométrie : directions en degrés (lacet = gauche/droite, tangage = haut/bas)
+  // ---------------------------------------------------------------------
   const canvas = document.getElementById('terrain') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d')!;
-  const accueil = document.getElementById('accueil')!;
-  const btnDemarrer = document.getElementById('demarrer') as HTMLButtonElement;
-  const consigne = document.getElementById('consigne')!;
-  const ligneRecord = document.getElementById('record')!;
-  const hTemps = document.getElementById('h-temps')!;
-  const hScore = document.getElementById('h-score')!;
-  const hLibScore = document.getElementById('h-lib-score')!;
-  const hPrec = document.getElementById('h-prec')!;
-  const ambre = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#19e3ff';
-
-  let mode: Mode = 'vitesse';
-  let actif = false;
-  let debut = 0;
-  let precedent = 0;
-  let touches = 0;
-  let tirs = 0;
-  let surCible = 0;
-  let echantillons = 0;
-  let cible: Cible | null = null;
-  let souris = { x: -1, y: -1 };
-  let dernierResultat = '';
-
-  const lireRecord = (m: Mode): number | null => {
-    try { const v = localStorage.getItem(`fragx.visee.${m}`); return v === null ? null : Number(v); } catch { return null; }
+  const terrain = document.getElementById('terrain-jeu')!;
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const deg = (r: number) => (r * 180) / Math.PI;
+  type V3 = [number, number, number];
+  const vecteur = (lacet: number, tangage: number): V3 => {
+    const y = rad(lacet), p = rad(tangage);
+    return [Math.cos(p) * Math.sin(y), Math.sin(p), Math.cos(p) * Math.cos(y)];
   };
-  const ecrireRecord = (m: Mode, v: number) => {
-    try { localStorage.setItem(`fragx.visee.${m}`, String(v)); } catch { /* stockage indisponible */ }
+  const ecart = (a: [number, number], b: [number, number]) => {
+    const u = vecteur(a[0], a[1]), v = vecteur(b[0], b[1]);
+    return deg(Math.acos(Math.min(1, u[0] * v[0] + u[1] * v[1] + u[2] * v[2])));
   };
-  const virgule = (n: number, d: number) => n.toFixed(d).replace('.', ',');
-  const points = () => Math.max(0, touches * 10 - (tirs - touches) * 5);
-  const precision = () => (tirs ? Math.round((touches / tirs) * 100) + ' %' : '--');
 
-  function texteRecord(m: Mode, v: number | null): string {
-    if (v === null) return 'Pas encore de record';
-    if (m === 'vitesse') return `Record : ${virgule(v / 1000, 2)} s`;
-    if (m === 'precision') return `Record : ${v} points`;
-    return `Record : ${v} % du temps sur la cible`;
-  }
-
-  function majAccueil() {
-    consigne.textContent = CONSIGNES[mode];
-    ligneRecord.textContent = (dernierResultat ? dernierResultat + '. ' : '') + texteRecord(mode, lireRecord(mode));
-    hLibScore.textContent = mode === 'suivi' ? 'Sur la cible' : mode === 'precision' ? 'Points' : 'Touches';
-  }
+  let L = 0, H = 0, focale = 1;
+  let camLacet = 0, camTangage = 0;
+  let curseur = { x: -1, y: -1 };
 
   function dimensionner() {
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(canvas.clientWidth * dpr);
-    canvas.height = Math.round(canvas.clientHeight * dpr);
+    L = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = Math.round(L * dpr); canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    focale = L / 2 / Math.tan(rad(reglages.fov / 2));
   }
+  const demiFovV = () => deg(Math.atan(Math.tan(rad(reglages.fov / 2)) * (H / L)));
+
+  function versCamera(v: V3): V3 {
+    const b = rad(camLacet), a = rad(camTangage);
+    const x1 = v[0] * Math.cos(b) - v[2] * Math.sin(b);
+    const z1 = v[0] * Math.sin(b) + v[2] * Math.cos(b);
+    const y2 = v[1] * Math.cos(a) - z1 * Math.sin(a);
+    const z2 = v[1] * Math.sin(a) + z1 * Math.cos(a);
+    return [x1, y2, z2];
+  }
+  function projeter(lacet: number, tangage: number): { x: number; y: number; z: number } | null {
+    const [x, y, z] = versCamera(vecteur(lacet, tangage));
+    if (z <= 0.02) return null;
+    return { x: L / 2 + (focale * x) / z, y: H / 2 - (focale * y) / z, z };
+  }
+  /** Direction visée : centre de l'écran (capture) ou position du curseur. */
+  function visee(): [number, number] {
+    if (reglages.controle === 'capture') return [camLacet, camTangage];
+    const x = (curseur.x - L / 2) / focale, y = -(curseur.y - H / 2) / focale;
+    return [deg(Math.atan2(x, 1)), deg(Math.atan2(y, Math.hypot(x, 1)))];
+  }
+
+  // ---------------------------------------------------------------------
+  // Exercice
+  // ---------------------------------------------------------------------
+  interface Cible { lacet: number; tangage: number; r: number; vl: number; vt: number; nee: number; }
+  let ex: DefExercice = EXERCICES[0];
+  let actif = false, debut = 0, precedent = 0;
+  let cible: Cible | null = null;
+  let touches = 0, tirs = 0, tempsSur = 0, tempsTotal = 0;
+  let tempsCibles: number[] = [];
+  let prochainChangement = 0;
+  let alea: () => number = Math.random;
+  let dernierResultat = '';
+
+  const params = new URLSearchParams(location.search);
+  const defi = params.get('defi') ? defiDu(jour()) : null;
+
+  const bornes = () => {
+    // Zone d'apparition : toujours visible en mode curseur ; en capture, plus large pour le flick
+    if (reglages.controle === 'curseur') return { fl: (reglages.fov / 2) * 0.82, ft: demiFovV() * 0.78 };
+    return ex.id === 'flick' || ex.id === 'micro' ? { fl: 48, ft: 22 } : { fl: 24, ft: 11 };
+  };
+  const borner = (v: number, m: number) => Math.max(-m, Math.min(m, v));
 
   function nouvelleCible(): Cible {
-    const l = canvas.clientWidth, h = canvas.clientHeight;
-    const base = Math.min(l, h);
-    const r = mode === 'precision' ? base * 0.022 : mode === 'suivi' ? base * 0.05 : base * 0.04;
-    const marge = r + 40;
-    const angle = Math.random() * Math.PI * 2;
-    const vitesse = mode === 'suivi' ? base * 0.45 : 0;
-    return {
-      x: marge + Math.random() * (l - 2 * marge),
-      y: marge + Math.random() * (h - 2 * marge),
-      r,
-      vx: Math.cos(angle) * vitesse,
-      vy: Math.sin(angle) * vitesse,
-    };
+    const { fl, ft } = bornes();
+    const [al, at] = visee();
+    const t = performance.now();
+    if (ex.id === 'flick' || ex.id === 'micro') {
+      const d = ex.id === 'flick' ? 18 + alea() * 22 : 1.5 + alea() * 3.5;
+      const th = alea() * Math.PI * 2;
+      return { lacet: borner(al + d * Math.cos(th), fl), tangage: borner(at + d * Math.sin(th) * 0.55, ft), r: ex.rayon, vl: 0, vt: 0, nee: t };
+    }
+    if (ex.id === 'suivi') {
+      const th = alea() * Math.PI * 2;
+      return { lacet: 0, tangage: 0, r: ex.rayon, vl: Math.cos(th) * 28, vt: Math.sin(th) * 14, nee: t };
+    }
+    if (ex.id === 'strafe') {
+      return { lacet: 0, tangage: (alea() - 0.5) * 6, r: ex.rayon, vl: (alea() < 0.5 ? -1 : 1) * 36, vt: 0, nee: t };
+    }
+    return { lacet: (alea() * 2 - 1) * fl * 0.9, tangage: (alea() * 2 - 1) * ft * 0.9, r: ex.rayon, vl: 0, vt: 0, nee: t };
   }
 
-  function dessinerCible(c: Cible) {
+  function deplacer(c: Cible, dt: number, t: number) {
+    const { fl, ft } = bornes();
+    c.lacet += c.vl * dt; c.tangage += c.vt * dt;
+    if (Math.abs(c.lacet) > fl * 0.9) { c.lacet = borner(c.lacet, fl * 0.9); c.vl = -c.vl; }
+    if (Math.abs(c.tangage) > ft * 0.9) { c.tangage = borner(c.tangage, ft * 0.9); c.vt = -c.vt; }
+    if (t >= prochainChangement) {
+      if (ex.id === 'strafe') {
+        c.vl = -c.vl;
+        prochainChangement = t + 250 + alea() * 550;
+      } else {
+        const th = alea() * Math.PI * 2;
+        c.vl = Math.cos(th) * 28; c.vt = Math.sin(th) * 14;
+        prochainChangement = t + 500 + alea() * 900;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Dessin
+  // ---------------------------------------------------------------------
+  function ligne(points: [number, number][], couleur: string, epaisseur = 1) {
+    ctx.strokeStyle = couleur; ctx.lineWidth = epaisseur; ctx.beginPath();
+    let leve = true;
+    for (const [l, t] of points) {
+      const p = projeter(l, t);
+      if (!p) { leve = true; continue; }
+      if (leve) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      leve = false;
+    }
+    ctx.stroke();
+  }
+  function dessinerDecor() {
+    for (let l = -180; l < 180; l += 15) {
+      const pts: [number, number][] = [];
+      for (let t = -75; t <= 75; t += 5) pts.push([l, t]);
+      ligne(pts, l === 0 ? 'rgba(25,227,255,0.28)' : 'rgba(139,92,255,0.2)');
+    }
+    for (let t = -60; t <= 60; t += 15) {
+      const pts: [number, number][] = [];
+      for (let l = -180; l <= 180; l += 4) pts.push([l, t]);
+      ligne(pts, t === 0 ? 'rgba(255,46,151,0.4)' : 'rgba(139,92,255,0.2)', t === 0 ? 1.5 : 1);
+    }
+  }
+  function dessinerCible(c: Cible, survol: boolean) {
+    const p = projeter(c.lacet, c.tangage);
+    if (!p) return;
+    const r = (focale * Math.tan(rad(c.r))) / p.z;
+    ctx.save();
+    ctx.shadowColor = survol ? '#19e3ff' : '#ff2e97';
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = survol ? '#19e3ff' : '#ff2e97';
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(11,6,32,0.85)';
+    ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.35, 0, Math.PI * 2); ctx.fill();
+  }
+  function dessinerFleche(c: Cible) {
+    // indique une cible hors de l'écran (mode capture)
+    const [x, y, z] = versCamera(vecteur(c.lacet, c.tangage));
+    const p = z > 0.02 ? { x: L / 2 + (focale * x) / z, y: H / 2 - (focale * y) / z } : null;
+    if (p && p.x > 0 && p.x < L && p.y > 0 && p.y < H) return;
+    const a = Math.atan2(-y, x);
+    const rx = L / 2 - 28, ry = H / 2 - 28;
+    const k = Math.min(rx / Math.abs(Math.cos(a) || 1e-6), ry / Math.abs(Math.sin(a) || 1e-6));
+    const px = L / 2 + Math.cos(a) * k, py = H / 2 + Math.sin(a) * k;
+    ctx.save(); ctx.translate(px, py); ctx.rotate(a);
+    ctx.fillStyle = '#ff2e97';
+    ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-8, -9); ctx.lineTo(-8, 9); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function dessinerViseur() {
+    const x = reglages.controle === 'capture' ? L / 2 : curseur.x;
+    const y = reglages.controle === 'capture' ? H / 2 : curseur.y;
+    if (x < 0) return;
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-    ctx.fillStyle = ambre;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, c.r * 0.35, 0, Math.PI * 2);
-    ctx.fillStyle = '#0b0620';
-    ctx.fill();
+    ctx.moveTo(x - 9, y); ctx.lineTo(x - 3, y); ctx.moveTo(x + 3, y); ctx.lineTo(x + 9, y);
+    ctx.moveTo(x, y - 9); ctx.lineTo(x, y - 3); ctx.moveTo(x, y + 3); ctx.lineTo(x, y + 9);
+    ctx.stroke();
+  }
+  function dessiner() {
+    ctx.clearRect(0, 0, L, H);
+    dessinerDecor();
+    if (cible) {
+      const sur = ecart(visee(), [cible.lacet, cible.tangage]) <= cible.r;
+      dessinerCible(cible, sur && ex.type === 'suivi');
+      if (reglages.controle === 'capture') dessinerFleche(cible);
+    }
+    dessinerViseur();
+  }
+
+  // ---------------------------------------------------------------------
+  // HUD et accueil
+  // ---------------------------------------------------------------------
+  const accueil = document.getElementById('accueil')!;
+  const btnDemarrer = document.getElementById('demarrer') as HTMLButtonElement;
+  const hTemps = document.getElementById('h-temps')!;
+  const hScore = document.getElementById('h-score')!;
+  const hPrec = document.getElementById('h-prec')!;
+  const virgule = (n: number, d: number) => n.toFixed(d).replace('.', ',');
+  const lireRecord = (m: Mode) => { try { const v = localStorage.getItem(`fragx.visee.${m}`); return v === null ? null : Number(v); } catch { return null; } };
+  const ecrireRecord = (m: Mode, v: number) => { try { localStorage.setItem(`fragx.visee.${m}`, String(v)); } catch { /* indisponible */ } };
+  const basMieux = (m: Mode) => m === 'vitesse' || m === 'flick';
+  const precision = () => (tirs ? `${Math.round((touches / tirs) * 100)} %` : '--');
+  const points = () => Math.max(0, touches * 10 - (tirs - touches) * 5);
+
+  function majAccueil() {
+    document.getElementById('consigne')!.textContent = ex.consigne;
+    const r = lireRecord(ex.id);
+    document.getElementById('record')!.textContent = (dernierResultat ? `${dernierResultat}. ` : '') + (r === null ? 'Pas encore de record' : `Record : ${ex.format(r)}`);
+    document.getElementById('h-lib-score')!.textContent = ex.libelleScore;
+    document.getElementById('indication')!.textContent = reglages.controle === 'capture'
+      ? 'Ta souris sera capturée pendant l\'exercice. Appuie sur Échap pour arrêter.'
+      : 'Vise avec le curseur, clique pour tirer. Échap pour arrêter.';
+    terrain.toggleAttribute('data-curseur', reglages.controle === 'curseur');
+  }
+
+  function majHud(t: number) {
+    const e = t - debut;
+    hTemps.textContent = ex.type === 'cibles' ? virgule(e / 1000, 1) : virgule(Math.max(0, (ex.duree! - e) / 1000), 1);
+    if (ex.type === 'suivi') hScore.textContent = tempsTotal ? `${Math.round((tempsSur / tempsTotal) * 100)} %` : '0 %';
+    else if (ex.id === 'precision') hScore.textContent = String(points());
+    else if (ex.type === 'cibles') hScore.textContent = `${touches}/${ex.nbCibles}`;
+    else hScore.textContent = String(touches);
+    hPrec.textContent = ex.type === 'suivi' ? '--' : precision();
   }
 
   function boucle(t: number) {
-    if (!actif) return;
-    const dt = precedent ? Math.min((t - precedent) / 1000, 0.1) : 0;
+    if (!actif) { dessiner(); return; }
+    const dt = precedent ? Math.min((t - precedent) / 1000, 0.05) : 0;
     precedent = t;
-    const ecoule = t - debut;
-    const l = canvas.clientWidth, h = canvas.clientHeight;
-    ctx.clearRect(0, 0, l, h);
-
-    if (mode === 'suivi' && cible) {
-      cible.x += cible.vx * dt;
-      cible.y += cible.vy * dt;
-      if (cible.x < cible.r) { cible.x = cible.r; cible.vx = Math.abs(cible.vx); }
-      if (cible.x > l - cible.r) { cible.x = l - cible.r; cible.vx = -Math.abs(cible.vx); }
-      if (cible.y < cible.r + 30) { cible.y = cible.r + 30; cible.vy = Math.abs(cible.vy); }
-      if (cible.y > h - cible.r) { cible.y = h - cible.r; cible.vy = -Math.abs(cible.vy); }
-      if (Math.random() < dt * 0.8) {
-        const a = Math.random() * Math.PI * 2;
-        const v = Math.hypot(cible.vx, cible.vy);
-        cible.vx = Math.cos(a) * v;
-        cible.vy = Math.sin(a) * v;
-      }
-      echantillons++;
-      if (Math.hypot(souris.x - cible.x, souris.y - cible.y) <= cible.r) surCible++;
-      hScore.textContent = Math.round((surCible / echantillons) * 100) + ' %';
+    if (cible && ex.type === 'suivi') {
+      deplacer(cible, dt, t);
+      tempsTotal += dt;
+      if (ecart(visee(), [cible.lacet, cible.tangage]) <= cible.r) tempsSur += dt;
     }
-    if (cible) dessinerCible(cible);
+    dessiner();
+    majHud(t);
+    if (ex.type !== 'cibles' && t - debut >= ex.duree!) { terminer(false); return; }
+    requestAnimationFrame(boucle);
+  }
 
-    hTemps.textContent = mode === 'vitesse'
-      ? virgule(ecoule / 1000, 1)
-      : virgule(Math.max(0, (DUREE - ecoule) / 1000), 1);
-
-    if (mode !== 'vitesse' && ecoule >= DUREE) { terminer(false); return; }
+  function lancer() {
+    dimensionner();
+    camLacet = 0; camTangage = 0;
+    touches = 0; tirs = 0; tempsSur = 0; tempsTotal = 0; tempsCibles = []; precedent = 0;
+    alea = defi ? generateur(defi.graine + 1) : Math.random;
+    if (reglages.controle === 'curseur') {
+      // la page a pu défiler depuis le dernier mouvement : on recalcule la position du curseur
+      const r = canvas.getBoundingClientRect();
+      curseur = dernierClient ? { x: dernierClient.x - r.left, y: dernierClient.y - r.top } : { x: L / 2, y: H / 2 };
+    }
+    actif = true;
+    debut = performance.now();
+    prochainChangement = debut + 600;
+    cible = nouvelleCible();
+    accueil.hidden = true;
+    document.getElementById('modes')!.toggleAttribute('data-verrou', true);
     requestAnimationFrame(boucle);
   }
 
   function demarrer() {
+    lireChamps();
+    preparerSon();
+    // amène la zone de jeu à l'écran (utile si les réglages sont ouverts)
+    const rect = terrain.getBoundingClientRect();
+    if (rect.top < 60 || rect.bottom > window.innerHeight) terrain.scrollIntoView({ block: 'center' });
     dimensionner();
-    actif = true;
-    touches = 0; tirs = 0; surCible = 0; echantillons = 0; precedent = 0;
-    debut = performance.now();
-    cible = nouvelleCible();
-    hScore.textContent = mode === 'suivi' ? '0 %' : mode === 'vitesse' ? `0/${NB_VITESSE}` : '0';
-    hPrec.textContent = '--';
-    accueil.hidden = true;
-    requestAnimationFrame(boucle);
+    if (reglages.controle === 'capture') {
+      try {
+        const r = (canvas.requestPointerLock as (o?: object) => Promise<void> | void)({ unadjustedMovement: true });
+        if (r instanceof Promise) r.catch(() => { try { canvas.requestPointerLock(); } catch { erreurCapture(); } });
+      } catch {
+        try { canvas.requestPointerLock(); } catch { erreurCapture(); }
+      }
+      // l'exercice démarre quand la capture est acceptée (pointerlockchange)
+    } else {
+      lancer();
+    }
+  }
+  function erreurCapture() {
+    document.getElementById('indication')!.textContent = 'Ce navigateur refuse de capturer la souris : passe en « Curseur libre » dans les réglages.';
   }
 
   function terminer(annule: boolean) {
+    if (!actif) return;
     actif = false;
     cible = null;
-    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-    const record = lireRecord(mode);
+    if (document.pointerLockElement === canvas) document.exitPointerLock();
+    if (!defi) document.getElementById('modes')!.removeAttribute('data-verrou');
     if (annule) {
       dernierResultat = 'Exercice arrêté';
-    } else if (mode === 'vitesse') {
-      const temps = Math.round(performance.now() - debut);
-      dernierResultat = `${virgule(temps / 1000, 2)} s, précision ${precision()}`;
-      ajouter('vitesse', temps);
-      if (record === null || temps < record) { ecrireRecord(mode, temps); dernierResultat += ', nouveau record'; }
-    } else if (mode === 'precision') {
-      const p = points();
-      dernierResultat = `${p} points, ${touches} touches, précision ${precision()}`;
-      ajouter('precision', p);
-      if (record === null || p > record) { ecrireRecord(mode, p); dernierResultat += ', nouveau record'; }
     } else {
-      const pct = echantillons ? Math.round((surCible / echantillons) * 100) : 0;
-      dernierResultat = `${pct} % du temps sur la cible`;
-      ajouter('suivi', pct);
-      if (record === null || pct > record) { ecrireRecord(mode, pct); dernierResultat += ', nouveau record'; }
+      let score: number;
+      if (ex.id === 'vitesse') score = Math.round(performance.now() - debut);
+      else if (ex.id === 'flick') score = Math.round(tempsCibles.reduce((a, b) => a + b, 0) / Math.max(1, tempsCibles.length));
+      else if (ex.id === 'precision') score = points();
+      else if (ex.id === 'micro') score = touches;
+      else score = tempsTotal ? Math.round((tempsSur / tempsTotal) * 100) : 0;
+
+      ajouter(ex.id, score);
+      const r = lireRecord(ex.id);
+      dernierResultat = ex.format(score) + (ex.type === 'suivi' ? '' : `, précision ${precision()}`);
+      if (r === null || (basMieux(ex.id) ? score < r : score > r)) { ecrireRecord(ex.id, score); dernierResultat += ', nouveau record'; }
+      if (defi && defi.exercice.id === ex.id) {
+        const meilleur = enregistrerDefi(defi.date, ex.id, score);
+        dernierResultat += meilleur ? ', meilleur score du défi aujourd\'hui' : '';
+      }
+      verifierBadges();
     }
     btnDemarrer.textContent = 'Recommencer';
     majAccueil();
     accueil.hidden = false;
+    dessiner();
     btnDemarrer.focus();
   }
 
-  function position(e: PointerEvent) {
-    const r = canvas.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  }
-
-  canvas.addEventListener('pointermove', (e) => { souris = position(e); });
-  canvas.addEventListener('pointerdown', (e) => {
-    if (!actif || mode === 'suivi' || !cible) return;
-    const p = position(e);
+  function tirer() {
+    if (!actif || !cible || ex.type === 'suivi') return;
     tirs++;
-    if (Math.hypot(p.x - cible.x, p.y - cible.y) <= cible.r) {
+    sonTir();
+    if (ecart(visee(), [cible.lacet, cible.tangage]) <= cible.r) {
       touches++;
-      if (mode === 'vitesse' && touches >= NB_VITESSE) { terminer(false); return; }
+      sonTouche();
+      if (ex.id === 'flick') tempsCibles.push(performance.now() - cible.nee);
+      if (ex.type === 'cibles' && touches >= ex.nbCibles!) { majHud(performance.now()); terminer(false); return; }
       cible = nouvelleCible();
     }
-    hScore.textContent = mode === 'precision' ? String(points()) : `${touches}/${NB_VITESSE}`;
-    hPrec.textContent = precision();
-  });
+  }
 
+  // ---------------------------------------------------------------------
+  // Entrées
+  // ---------------------------------------------------------------------
+  // Juste après la capture, Chrome envoie parfois un faux mouvement (saut du curseur au centre) :
+  // on ignore les mouvements pendant un court instant, puis tout saut manifestement impossible.
+  let ignorerJusqua = 0;
+  const SAUT_MAX = 1500;
+
+  document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === canvas) { ignorerJusqua = performance.now() + 120; if (!actif) lancer(); }
+    else if (actif && reglages.controle === 'capture') terminer(true);
+  });
+  document.addEventListener('pointerlockerror', erreurCapture);
+
+  document.addEventListener('mousemove', (e) => {
+    if (document.pointerLockElement !== canvas || !actif) return;
+    if (performance.now() < ignorerJusqua || Math.abs(e.movementX) > SAUT_MAX || Math.abs(e.movementY) > SAUT_MAX) return;
+    const k = reglages.sens * yawJeu();
+    camLacet += e.movementX * k;
+    camTangage = borner(camTangage - e.movementY * k, 89);
+  });
+  document.addEventListener('mousedown', (e) => {
+    if (document.pointerLockElement === canvas && e.button === 0) tirer();
+  });
+  // Suivi du curseur sur toute la page (y compris au-dessus du bouton Commencer)
+  let dernierClient: { x: number; y: number } | null = null;
+  window.addEventListener('pointermove', (e) => {
+    if (document.pointerLockElement) return;
+    dernierClient = { x: e.clientX, y: e.clientY };
+    const r = canvas.getBoundingClientRect();
+    curseur = { x: e.clientX - r.left, y: e.clientY - r.top };
+    if (!actif && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) dessiner();
+  });
+  canvas.addEventListener('pointerdown', (e) => {
+    if (reglages.controle !== 'curseur' || e.button !== 0) return;
+    const r = canvas.getBoundingClientRect();
+    curseur = { x: e.clientX - r.left, y: e.clientY - r.top };
+    tirer();
+  });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && actif) terminer(true); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && actif) terminer(true); });
+  window.addEventListener('resize', () => { dimensionner(); if (!actif) dessiner(); });
   btnDemarrer.addEventListener('click', demarrer);
 
-  for (const bouton of document.querySelectorAll<HTMLButtonElement>('[data-mode]')) {
-    bouton.addEventListener('click', () => {
-      if (actif) terminer(true);
-      mode = bouton.dataset.mode as Mode;
-      for (const b of document.querySelectorAll('[data-mode]')) b.setAttribute('aria-checked', String(b === bouton));
-      dernierResultat = '';
-      btnDemarrer.textContent = 'Commencer';
-      majAccueil();
-    });
+  function choisir(m: string) {
+    const e = exercice(m);
+    if (!e) return;
+    if (actif) terminer(true);
+    ex = e;
+    for (const b of document.querySelectorAll('[data-mode]')) b.setAttribute('aria-checked', String(b.getAttribute('data-mode') === m));
+    dernierResultat = '';
+    btnDemarrer.textContent = 'Commencer';
+    majAccueil();
+  }
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-mode]')) {
+    b.addEventListener('click', () => choisir(b.dataset.mode!));
   }
 
+  // Exercice demandé dans l'adresse (?mode=…) ou défi du jour (?defi=1)
+  if (defi) {
+    choisir(defi.exercice.id);
+    const bandeau = document.getElementById('bandeau-defi')!;
+    bandeau.textContent = `Défi du jour : ${defi.exercice.nom}. Mêmes cibles pour tous les joueurs aujourd'hui.`;
+    bandeau.hidden = false;
+    document.getElementById('modes')!.toggleAttribute('data-verrou', true);
+  } else {
+    choisir(params.get('mode') ?? 'vitesse');
+  }
+
+  dimensionner();
   majAccueil();
-
-  // Exercice demandé dans l'adresse (?mode=precision), utilisé par la routine
-  const demande = new URLSearchParams(location.search).get('mode');
-  if (demande && demande in CONSIGNES) {
-    document.querySelector<HTMLButtonElement>(`[data-mode="${demande}"]`)?.click();
-  }
+  dessiner();
 </script>

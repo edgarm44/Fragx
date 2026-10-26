@@ -121,55 +121,36 @@ const etapes = [
 
 <script>
   import { lireHistorique, jour, PLUS_BAS_MEILLEUR, type Exercice } from '../lib/historique';
+  import { CIBLES_ROUTINE, lireManuel, ecrireManuel, seriesParJour, serieRoutine } from '../lib/progression';
+  import { verifierBadges } from '../lib/badges';
 
-  const CLE_MANUEL = 'fragx.routine.jeu';
   const EXERCICES: { id: Exercice; nom: string; unite: (v: number) => string }[] = [
     { id: 'reflexes', nom: 'Réflexes', unite: (v) => `${Math.round(v)} ms` },
     { id: 'vitesse', nom: 'Vitesse', unite: (v) => `${(v / 1000).toFixed(2).replace('.', ',')} s` },
     { id: 'precision', nom: 'Précision', unite: (v) => `${Math.round(v)} pts` },
     { id: 'suivi', nom: 'Suivi', unite: (v) => `${Math.round(v)} %` },
+    { id: 'flick', nom: 'Flick', unite: (v) => `${Math.round(v)} ms` },
+    { id: 'micro', nom: 'Micro-ajustements', unite: (v) => `${Math.round(v)} touches` },
+    { id: 'strafe', nom: 'Strafe', unite: (v) => `${Math.round(v)} %` },
   ];
-  const CIBLES: Record<Exercice, number> = { reflexes: 1, vitesse: 2, precision: 2, suivi: 2 };
-
-  function lireManuel(): string[] {
-    try { const v = JSON.parse(localStorage.getItem(CLE_MANUEL) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
-  }
-  function ecrireManuel(jours: string[]) {
-    try { localStorage.setItem(CLE_MANUEL, JSON.stringify(jours.slice(-400))); } catch { /* indisponible */ }
-  }
 
   const h = lireHistorique();
   const aujourdHui = jour();
-
-  // Nombre de séries par jour et par exercice
-  const parJour = new Map<string, Record<Exercice, number>>();
-  for (const ex of Object.keys(h) as Exercice[]) {
-    for (const e of h[ex]) {
-      const j = jour(e.t);
-      const r = parJour.get(j) ?? { reflexes: 0, vitesse: 0, precision: 0, suivi: 0 };
-      r[ex]++;
-      parJour.set(j, r);
-    }
-  }
-  const manuel = new Set(lireManuel());
-
-  function jourComplet(j: string): boolean {
-    const r = parJour.get(j);
-    if (!r || !manuel.has(j)) return false;
-    return (Object.keys(CIBLES) as Exercice[]).every((ex) => r[ex] >= CIBLES[ex]);
-  }
+  const parJour = seriesParJour(h);
+  const manuel = lireManuel();
 
   function majEtapes() {
-    const r = parJour.get(aujourdHui) ?? { reflexes: 0, vitesse: 0, precision: 0, suivi: 0 };
+    const r = parJour.get(aujourdHui) ?? {};
     let toutes = true;
     for (const li of document.querySelectorAll<HTMLElement>('[data-etape]')) {
       const id = li.dataset.etape!;
       let ok: boolean;
       if (id === 'jeu') ok = manuel.has(aujourdHui);
       else {
-        const fait = r[id as Exercice];
-        li.querySelector('.fait')!.textContent = String(Math.min(fait, CIBLES[id as Exercice]));
-        ok = fait >= CIBLES[id as Exercice];
+        const cible = CIBLES_ROUTINE[id as Exercice] ?? 1;
+        const fait = r[id as Exercice] ?? 0;
+        li.querySelector('.fait')!.textContent = String(Math.min(fait, cible));
+        ok = fait >= cible;
       }
       li.toggleAttribute('data-ok', ok);
       toutes &&= ok;
@@ -178,11 +159,7 @@ const etapes = [
   }
 
   function majSerie() {
-    let n = 0;
-    const d = new Date();
-    d.setHours(12, 0, 0, 0);
-    if (!jourComplet(jour(d.getTime()))) d.setDate(d.getDate() - 1);
-    while (jourComplet(jour(d.getTime()))) { n++; d.setDate(d.getDate() - 1); }
+    const n = serieRoutine(parJour, manuel);
     document.getElementById('serie')!.textContent = String(n);
     document.getElementById('serie-lib')!.textContent = n > 1 ? 'jours d\'affilée' : 'jour d\'affilée';
   }
@@ -191,9 +168,10 @@ const etapes = [
   caseJeu.checked = manuel.has(aujourdHui);
   caseJeu.addEventListener('change', () => {
     if (caseJeu.checked) manuel.add(aujourdHui); else manuel.delete(aujourdHui);
-    ecrireManuel([...manuel].sort());
+    ecrireManuel(manuel);
     majEtapes();
     majSerie();
+    verifierBadges();
   });
 
   // --- Graphiques de progression (une courbe par exercice) ---------------

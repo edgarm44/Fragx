@@ -1,0 +1,95 @@
+---
+import Base from '../layouts/Base.astro';
+import { lien } from '../lib/lien';
+---
+<Base title="Défi du jour" description="Un exercice de visée imposé chaque jour, avec les mêmes cibles pour tous les joueurs de Fragx.">
+  <div class="conteneur en-tete-page">
+    <h1>Défi du jour</h1>
+    <p class="chapo">
+      Chaque jour, un exercice tiré au sort, avec exactement les mêmes cibles pour tous les joueurs.
+      Tu peux le refaire autant de fois que tu veux : seul ton meilleur score du jour est gardé.
+    </p>
+  </div>
+
+  <div class="conteneur disposition">
+    <section class="carte panneau" aria-labelledby="t-defi">
+      <p class="date" id="date-defi"></p>
+      <h2 id="t-defi">--</h2>
+      <p class="consigne" id="consigne-defi"></p>
+      <div class="score">
+        <span class="libelle">Ton meilleur score aujourd'hui</span>
+        <span class="chiffre valeur" id="score-defi">--</span>
+      </div>
+      <a class="bouton bouton-principal" id="lancer-defi" href={`${lien('/visee')}?defi=1`}>Relever le défi</a>
+      <p class="prochain">Prochain défi dans <span class="chiffre" id="compte">--</span></p>
+    </section>
+
+    <section aria-labelledby="t-historique">
+      <h2 id="t-historique">Tes derniers défis</h2>
+      <p class="vide" id="vide-defis">Aucun défi terminé pour l'instant.</p>
+      <table id="table-defis" hidden>
+        <caption class="visuellement-cache">Résultats des défis précédents</caption>
+        <thead><tr><th scope="col">Jour</th><th scope="col">Exercice</th><th scope="col">Meilleur score</th></tr></thead>
+        <tbody id="corps-defis"></tbody>
+      </table>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .disposition { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; align-items: start; padding-bottom: 2rem; }
+  .carte { display: grid; gap: 1rem; justify-items: start; }
+  .date { color: var(--magenta); font-family: var(--titre); font-weight: 600; margin: 0; }
+  .carte h2 { font-size: var(--t-3xl); font-style: italic; margin: 0; color: var(--cyan); text-shadow: var(--lueur-cyan); }
+  .consigne { color: var(--gris); margin: 0; }
+  .score { display: grid; gap: 0.25rem; }
+  .libelle { color: var(--gris); font-size: var(--t-s); }
+  .valeur { font-size: var(--t-4xl); }
+  .prochain { color: var(--gris); font-size: var(--t-s); margin: 0; }
+  #compte { color: var(--texte); font-size: var(--t-l); }
+  h2 { font-style: italic; }
+  .vide { color: var(--gris); }
+  @media (max-width: 52rem) { .disposition { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  import { defiDu, resultatsDefis } from '../lib/defi';
+  import { jour } from '../lib/historique';
+  import { exercice } from '../lib/exercices';
+
+  const d = defiDu(jour());
+  const dateLongue = (j: string) => new Date(j + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('date-defi')!.textContent = dateLongue(d.date);
+  document.getElementById('t-defi')!.textContent = d.exercice.nom;
+  document.getElementById('consigne-defi')!.textContent = d.exercice.consigne;
+
+  const res = resultatsDefis();
+  if (res[d.date] !== undefined) {
+    document.getElementById('score-defi')!.textContent = d.exercice.format(res[d.date]);
+    document.getElementById('lancer-defi')!.textContent = 'Améliorer mon score';
+  }
+
+  const jours = Object.keys(res).filter((j) => j !== d.date).sort().reverse().slice(0, 14);
+  if (jours.length) {
+    document.getElementById('vide-defis')!.hidden = true;
+    document.getElementById('table-defis')!.hidden = false;
+    document.getElementById('corps-defis')!.replaceChildren(...jours.map((j) => {
+      const ex = defiDu(j).exercice;
+      const tr = document.createElement('tr');
+      for (const v of [new Date(j + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }), ex.nom, exercice(ex.id)!.format(res[j])]) {
+        const td = document.createElement('td'); td.textContent = v; tr.append(td);
+      }
+      return tr;
+    }));
+  }
+
+  function compte() {
+    const fin = new Date(); fin.setHours(24, 0, 0, 0);
+    const s = Math.max(0, Math.floor((fin.getTime() - Date.now()) / 1000));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    document.getElementById('compte')!.textContent = `${h} h ${String(m).padStart(2, '0')} min ${String(sec).padStart(2, '0')} s`;
+    if (s === 0) location.reload();
+  }
+  compte();
+  setInterval(compte, 1000);
+</script>
