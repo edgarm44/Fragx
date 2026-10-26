@@ -57,8 +57,8 @@ import Base from '../layouts/Base.astro';
 </Base>
 
 <style>
-  .scene { position: relative; padding: 0; overflow: hidden; aspect-ratio: 16 / 9; }
-  canvas { width: 100%; height: 100%; display: block; background: #0d0f1f; }
+  .scene { position: relative; padding: 1px; overflow: hidden; aspect-ratio: 16 / 9; }
+  canvas { width: 100%; height: 100%; display: block; background: #08041a; }
   .hud {
     position: absolute;
     top: 0.75rem;
@@ -66,18 +66,18 @@ import Base from '../layouts/Base.astro';
     display: flex;
     align-items: baseline;
     gap: 0.75rem;
-    background: color-mix(in srgb, var(--nuit) 80%, transparent);
+    background: color-mix(in srgb, var(--fond) 80%, transparent);
     padding: 0.4rem 0.75rem;
     border-radius: var(--rayon);
   }
-  .hud .chiffre { font-size: var(--t-2xl); color: var(--ambre); }
+  .hud .chiffre { font-size: var(--t-2xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
   #hud-etat { color: var(--gris); font-size: var(--t-s); }
   .commandes { display: flex; gap: 0.75rem; margin: 1.25rem 0 2rem; }
   .resultat[hidden] { display: none; }
   .resultat { display: grid; grid-template-columns: minmax(12rem, 16rem) 1fr; gap: 2rem; align-items: start; margin-bottom: 2rem; }
   .score { display: grid; gap: 0.25rem; }
   .libelle { color: var(--gris); font-size: var(--t-s); margin: 0; }
-  .valeur { font-size: var(--t-4xl); color: var(--ambre); }
+  .valeur { font-size: var(--t-4xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
   .avertissement { border-left: 3px solid var(--alerte); padding: 0.75rem 1rem; background: var(--plaque); }
   .explication { margin-top: 1rem; }
   .explication h2 { font-size: var(--t-xl); }
@@ -134,7 +134,7 @@ import Base from '../layouts/Base.astro';
     float w = -monde.z;
     gl_Position = vec4(monde.xy * uAspect * 1.8, ((w - 2.) / 5.) * w, w);
     vNormal = r * aNormal;
-    vCouleur = mix(vec3(1., .70, .14), vec3(.55, .58, 1.), fract(id * .618));
+    vCouleur = mix(vec3(1., .18, .59), vec3(.10, .89, 1.), fract(id * .618));
   }`;
 
   const FS = `#version 300 es
@@ -211,7 +211,7 @@ import Base from '../layouts/Base.astro';
     if (!gl || !programme) return;
     redimensionner();
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.05, 0.06, 0.12, 1);
+    gl.clearColor(0.03, 0.02, 0.10, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.useProgram(programme);
     gl.uniform1f(uTemps, t / 1000);
@@ -277,7 +277,10 @@ import Base from '../layouts/Base.astro';
     hudEtat.textContent = annule ? 'Arrêté' : 'Terminé';
 
     if (document.hidden && !annule) afficherErreur('Le test s\'est interrompu parce que l\'onglet est passé en arrière-plan. Relance-le en gardant l\'onglet visible.');
-    if (!resultats.length) return;
+    if (!resultats.length) {
+      if (annule) afficherErreur('Test arrêté avant la fin du premier palier (environ 5 secondes) : aucun score à afficher. Relance-le et laisse-le tourner jusqu\'au bout.');
+      return;
+    }
 
     const score = Math.max(...resultats.map((r) => (r.cubes * r.moyenne) / 1000));
     document.getElementById('score')!.textContent = format(score);

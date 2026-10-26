@@ -79,6 +79,12 @@ import { JEUX } from '../data/jeux';
     if (d.dpi) dpi.value = d.dpi;
   } catch (e) { /* stockage indisponible */ }
 
+  // Valeurs passées dans l'adresse (?jeu=valorant&sens=0.35&dpi=800), depuis la page des pros
+  const params = new URLSearchParams(location.search);
+  if (params.get('jeu') && jeux.some((j) => j.id === params.get('jeu'))) source.value = params.get('jeu');
+  if (params.get('sens')) sens.value = params.get('sens');
+  if (params.get('dpi')) dpi.value = params.get('dpi');
+
   const nombre = (n, dec) => n.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 
   function calculer() {
@@ -99,7 +105,8 @@ import { JEUX } from '../data/jeux';
     const degresParPouce = s * jeu.yaw * d;
     const cm360 = (360 / degresParPouce) * 2.54;
     document.getElementById('cm360').textContent = nombre(cm360, 1);
-    document.getElementById('edpi').textContent = nombre(s * d, 0);
+    // Fortnite : la sensibilité est un pourcentage, l'eDPI se calcule sur la valeur décimale
+    document.getElementById('edpi').textContent = jeu.id === 'fortnite' ? nombre((s / 100) * d, 1) : nombre(s * d, 0);
 
     corps.replaceChildren(...jeux.filter((j) => j.id !== jeu.id).map((j) => {
       const tr = document.createElement('tr');
@@ -130,7 +137,7 @@ import { JEUX } from '../data/jeux';
   form { display: grid; gap: 1rem; }
   .mesures { display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 1.5rem; }
   .mesure { display: grid; gap: 0.25rem; }
-  .mesure .chiffre { font-size: var(--t-4xl); color: var(--ambre); }
+  .mesure .chiffre { font-size: var(--t-4xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
   .libelle { color: var(--gris); font-size: var(--t-s); }
   tbody :global(th) { color: var(--texte); font-weight: 500; font-size: var(--t-m); }
   tbody :global(td) { font-size: var(--t-xl); }

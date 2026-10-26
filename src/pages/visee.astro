@@ -48,22 +48,23 @@ import Base from '../layouts/Base.astro';
   }
   .modes button strong { font-family: var(--titre); font-size: var(--t-l); font-weight: 600; }
   .modes button span { color: var(--gris); font-size: var(--t-s); }
-  .modes button[aria-checked='true'] { border-color: var(--ambre); box-shadow: inset 0 0 0 1px var(--ambre); }
+  .modes button[aria-checked='true'] { border-color: var(--magenta); box-shadow: inset 0 0 0 1px var(--magenta), 0 0 18px rgb(255 46 151 / 0.25); }
   .arene {
     position: relative; aspect-ratio: 16 / 9; min-height: 18rem;
     border: 1px solid var(--trait); border-radius: var(--rayon); overflow: hidden;
     background:
-      linear-gradient(color-mix(in srgb, var(--trait) 45%, transparent) 1px, transparent 1px) 0 0 / 48px 48px,
-      linear-gradient(90deg, color-mix(in srgb, var(--trait) 45%, transparent) 1px, transparent 1px) 0 0 / 48px 48px,
-      #101326;
+      linear-gradient(rgb(139 92 255 / 0.16) 1px, transparent 1px) 0 0 / 48px 48px,
+      linear-gradient(90deg, rgb(139 92 255 / 0.16) 1px, transparent 1px) 0 0 / 48px 48px,
+      radial-gradient(ellipse at 50% 120%, rgb(255 46 151 / 0.18), transparent 60%),
+      #0a0520;
   }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
   .hud { position: absolute; top: 0.6rem; left: 0.75rem; right: 0.75rem; display: flex; gap: 1.5rem; pointer-events: none; }
-  .hud .chiffre { font-size: var(--t-xl); color: var(--ambre); }
+  .hud .chiffre { font-size: var(--t-xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
   .libelle { color: var(--gris); font-size: var(--t-xs); }
   .accueil {
     position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 0.75rem;
-    text-align: center; background: color-mix(in srgb, var(--nuit) 78%, transparent); padding: 1rem;
+    text-align: center; background: color-mix(in srgb, var(--fond) 78%, transparent); padding: 1rem;
   }
   .accueil[hidden] { display: none; }
   .accueil p { margin: 0; }
@@ -73,6 +74,8 @@ import Base from '../layouts/Base.astro';
 </style>
 
 <script>
+  import { ajouter } from '../lib/historique';
+
   type Mode = 'vitesse' | 'precision' | 'suivi';
   interface Cible { x: number; y: number; r: number; vx: number; vy: number; }
 
@@ -94,7 +97,7 @@ import Base from '../layouts/Base.astro';
   const hScore = document.getElementById('h-score')!;
   const hLibScore = document.getElementById('h-lib-score')!;
   const hPrec = document.getElementById('h-prec')!;
-  const ambre = getComputedStyle(document.documentElement).getPropertyValue('--ambre').trim() || '#ffb224';
+  const ambre = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#19e3ff';
 
   let mode: Mode = 'vitesse';
   let actif = false;
@@ -161,7 +164,7 @@ import Base from '../layouts/Base.astro';
     ctx.fill();
     ctx.beginPath();
     ctx.arc(c.x, c.y, c.r * 0.35, 0, Math.PI * 2);
-    ctx.fillStyle = '#1a1405';
+    ctx.fillStyle = '#0b0620';
     ctx.fill();
   }
 
@@ -222,14 +225,17 @@ import Base from '../layouts/Base.astro';
     } else if (mode === 'vitesse') {
       const temps = Math.round(performance.now() - debut);
       dernierResultat = `${virgule(temps / 1000, 2)} s, précision ${precision()}`;
+      ajouter('vitesse', temps);
       if (record === null || temps < record) { ecrireRecord(mode, temps); dernierResultat += ', nouveau record'; }
     } else if (mode === 'precision') {
       const p = points();
       dernierResultat = `${p} points, ${touches} touches, précision ${precision()}`;
+      ajouter('precision', p);
       if (record === null || p > record) { ecrireRecord(mode, p); dernierResultat += ', nouveau record'; }
     } else {
       const pct = echantillons ? Math.round((surCible / echantillons) * 100) : 0;
       dernierResultat = `${pct} % du temps sur la cible`;
+      ajouter('suivi', pct);
       if (record === null || pct > record) { ecrireRecord(mode, pct); dernierResultat += ', nouveau record'; }
     }
     btnDemarrer.textContent = 'Recommencer';
@@ -273,4 +279,10 @@ import Base from '../layouts/Base.astro';
   }
 
   majAccueil();
+
+  // Exercice demandé dans l'adresse (?mode=precision), utilisé par la routine
+  const demande = new URLSearchParams(location.search).get('mode');
+  if (demande && demande in CONSIGNES) {
+    document.querySelector<HTMLButtonElement>(`[data-mode="${demande}"]`)?.click();
+  }
 </script>

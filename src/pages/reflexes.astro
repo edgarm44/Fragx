@@ -1,0 +1,216 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Test de réflexes" description="Mesure ton temps de réaction : clique dès que l'écran passe au cyan. Moyenne sur 5 essais.">
+  <div class="conteneur en-tete-page">
+    <h1>Test de réflexes</h1>
+    <p class="chapo">
+      Clique, ou appuie sur Espace, dès que la zone passe au cyan. Cinq essais, puis ta moyenne.
+      Si tu cliques trop tôt, l'essai est recommencé.
+    </p>
+  </div>
+
+  <div class="conteneur">
+    <button type="button" class="zone" id="zone" data-etat="pret" aria-live="assertive">
+      <span class="grand chiffre" id="z-titre">Clique pour commencer</span>
+      <span class="sous" id="z-sous">Garde la main sur la souris, le regard au centre.</span>
+    </button>
+
+    <ol class="essais" id="essais" aria-label="Résultats des essais"></ol>
+
+    <section class="resultat panneau" id="resultat" hidden aria-live="polite">
+      <div class="score">
+        <span class="libelle">Moyenne</span>
+        <span class="chiffre valeur" id="moyenne">--</span>
+        <span class="libelle" id="niveau"></span>
+      </div>
+      <dl>
+        <div><dt>Meilleur essai</dt><dd class="chiffre" id="meilleur">--</dd></div>
+        <div><dt>Record sur cet appareil</dt><dd class="chiffre" id="record">--</dd></div>
+      </dl>
+    </section>
+
+    <aside class="explication">
+      <h2>Comment lire ton résultat</h2>
+      <table>
+        <caption class="visuellement-cache">Repères de temps de réaction</caption>
+        <thead><tr><th scope="col">Moyenne</th><th scope="col">Niveau</th></tr></thead>
+        <tbody>
+          <tr><td>Moins de 180 ms</td><td>Exceptionnel</td></tr>
+          <tr><td>180 à 220 ms</td><td>Très bon</td></tr>
+          <tr><td>220 à 270 ms</td><td>Dans la moyenne</td></tr>
+          <tr><td>Plus de 270 ms</td><td>À travailler</td></tr>
+        </tbody>
+      </table>
+      <p>
+        Le temps mesuré inclut le délai de ton écran, de ta souris et du navigateur, en plus de ta réaction :
+        un écran 60 Hz ajoute à lui seul jusqu'à 17 ms. Compare-toi surtout à toi-même, sur le même matériel.
+        Le sommeil, la fatigue et l'échauffement comptent plus que tout le reste.
+      </p>
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .zone {
+    width: 100%;
+    min-height: clamp(16rem, 42vh, 24rem);
+    display: grid;
+    place-content: center;
+    gap: 0.75rem;
+    text-align: center;
+    padding: 1.5rem;
+    border: 0;
+    cursor: pointer;
+    color: var(--texte);
+    font: inherit;
+    clip-path: var(--biseau);
+    background: linear-gradient(160deg, #1b1145, #0d0726);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .grand { font-size: clamp(var(--t-2xl), 5vw, var(--t-4xl)); font-style: italic; }
+  .sous { color: var(--gris); }
+  .zone[data-etat='attente'] { background: linear-gradient(160deg, #4a0f3a, #24072a); }
+  .zone[data-etat='attente'] .grand { color: var(--magenta); text-shadow: var(--lueur-magenta); }
+  .zone[data-etat='go'] { background: var(--cyan); color: #04121a; }
+  .zone[data-etat='go'] .sous { color: #04303e; }
+  .zone[data-etat='tot'] { background: linear-gradient(160deg, #4b0d1c, #22060e); }
+  .zone[data-etat='tot'] .grand { color: var(--alerte); }
+  .zone[data-etat='essai'] .grand, .zone[data-etat='fin'] .grand { color: var(--cyan); text-shadow: var(--lueur-cyan); }
+
+  .essais { list-style: none; display: flex; gap: 0.5rem; padding: 0; margin: 1rem 0 1.5rem; flex-wrap: wrap; min-height: 2.4rem; }
+  .essais :global(li) {
+    font-family: var(--titre); font-weight: 700;
+    padding: 0.45rem 0.8rem;
+    background: var(--plaque);
+    border: 1px solid var(--trait);
+    border-radius: var(--rayon);
+    font-variant-numeric: tabular-nums;
+  }
+  .essais :global(li.meilleur) { border-color: var(--cyan); color: var(--cyan); }
+
+  .resultat { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1.5rem; align-items: end; margin-bottom: 2rem; }
+  .resultat[hidden] { display: none; }
+  .score { display: grid; gap: 0.25rem; }
+  .libelle { color: var(--gris); font-size: var(--t-s); }
+  .valeur { font-size: var(--t-4xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
+  dl { margin: 0; display: grid; gap: 0.75rem; }
+  dt { color: var(--gris); font-size: var(--t-xs); }
+  dd { margin: 0; font-size: var(--t-xl); }
+  .explication { max-width: 42rem; }
+  .explication h2 { font-size: var(--t-xl); }
+  .explication p { color: var(--gris); margin-top: 1rem; }
+</style>
+
+<script>
+  import { ajouter, lireHistorique } from '../lib/historique';
+
+  const NB_ESSAIS = 5;
+  const zone = document.getElementById('zone') as HTMLButtonElement;
+  const titre = document.getElementById('z-titre')!;
+  const sous = document.getElementById('z-sous')!;
+  const liste = document.getElementById('essais')!;
+  const resultat = document.getElementById('resultat')!;
+
+  type Etat = 'pret' | 'attente' | 'go' | 'tot' | 'essai' | 'fin';
+  let etat: Etat = 'pret';
+  let essais: number[] = [];
+  let minuterie = 0;
+  let debut = 0;
+
+  const ms = (v: number) => `${Math.round(v)} ms`;
+  function niveau(v: number): string {
+    if (v < 180) return 'Exceptionnel';
+    if (v < 220) return 'Très bon';
+    if (v < 270) return 'Dans la moyenne';
+    return 'À travailler';
+  }
+
+  function afficher(e: Etat, t: string, s: string) {
+    etat = e;
+    zone.dataset.etat = e;
+    titre.textContent = t;
+    sous.textContent = s;
+  }
+
+  function lancerEssai() {
+    afficher('attente', 'Attends le cyan…', `Essai ${essais.length + 1} sur ${NB_ESSAIS}`);
+    const delai = 1200 + Math.random() * 2800;
+    minuterie = window.setTimeout(() => {
+      // Le changement de couleur est appliqué, puis on note l'heure à l'image suivante (quand il est affiché)
+      afficher('go', 'Clique !', '');
+      requestAnimationFrame(() => { debut = performance.now(); });
+    }, delai);
+  }
+
+  function majEssais() {
+    const meilleur = Math.min(...essais);
+    liste.replaceChildren(...essais.map((v) => {
+      const li = document.createElement('li');
+      li.textContent = ms(v);
+      if (v === meilleur) li.className = 'meilleur';
+      return li;
+    }));
+  }
+
+  function terminer() {
+    const moyenne = essais.reduce((a, b) => a + b, 0) / essais.length;
+    const meilleur = Math.min(...essais);
+    ajouter('reflexes', Math.round(moyenne));
+    const historique = lireHistorique().reflexes;
+    const record = Math.min(...historique.map((e) => e.score));
+    document.getElementById('moyenne')!.textContent = ms(moyenne);
+    document.getElementById('niveau')!.textContent = niveau(moyenne);
+    document.getElementById('meilleur')!.textContent = ms(meilleur);
+    document.getElementById('record')!.textContent = ms(record);
+    resultat.hidden = false;
+    afficher('fin', ms(moyenne), `${niveau(moyenne)}. Clique pour une nouvelle série.`);
+  }
+
+  function action() {
+    switch (etat) {
+      case 'pret':
+      case 'fin':
+        essais = [];
+        liste.replaceChildren();
+        resultat.hidden = true;
+        lancerEssai();
+        break;
+      case 'attente':
+        clearTimeout(minuterie);
+        afficher('tot', 'Trop tôt', 'Attends que la zone passe au cyan. Clique pour reprendre cet essai.');
+        break;
+      case 'tot':
+        lancerEssai();
+        break;
+      case 'go': {
+        if (!debut) return; // couleur pas encore affichée
+        const temps = performance.now() - debut;
+        debut = 0;
+        essais.push(temps);
+        majEssais();
+        if (essais.length >= NB_ESSAIS) terminer();
+        else afficher('essai', ms(temps), 'Clique pour l\'essai suivant.');
+        break;
+      }
+      case 'essai':
+        lancerEssai();
+        break;
+    }
+  }
+
+  // pointerdown : plus rapide que click (déclenché à l'appui, pas au relâchement)
+  zone.addEventListener('pointerdown', (e) => { if (e.button === 0) { e.preventDefault(); action(); } });
+  zone.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (!e.repeat) action(); }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && (etat === 'attente' || etat === 'go')) {
+      clearTimeout(minuterie);
+      debut = 0;
+      afficher('tot', 'Essai interrompu', 'L\'onglet est passé en arrière-plan. Clique pour reprendre.');
+    }
+  });
+</script>

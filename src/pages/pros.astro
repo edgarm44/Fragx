@@ -1,0 +1,148 @@
+---
+import Base from '../layouts/Base.astro';
+import { lien } from '../lib/lien';
+import { PROS } from '../data/pros';
+import { JEUX } from '../data/jeux';
+
+const yaw = (id: string) => JEUX.find((j) => j.id === id)!.yaw;
+const cm360 = (id: string, sens: number, dpi: number) => (360 / (sens * yaw(id) * dpi)) * 2.54;
+const nb = (v: number, d = 0) => v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const comparer = (id: string, sens: number, dpi: number) => `${lien('/sensibilite')}?jeu=${id}&sens=${sens}&dpi=${dpi}`;
+---
+<Base title="Réglages des pros" description="Sensibilité, DPI, eDPI, cm/360 et souris de joueurs professionnels sur Valorant, Fortnite et Apex Legends.">
+  <div class="conteneur en-tete-page">
+    <h1>Réglages des pros</h1>
+    <p class="chapo">
+      Sensibilité et matériel de joueurs professionnels et de créateurs connus. Clique sur « Comparer »
+      pour voir l'équivalent dans tes autres jeux avec le convertisseur.
+    </p>
+  </div>
+
+  <div class="conteneur">
+    <div class="onglets" role="tablist" aria-label="Jeu">
+      {PROS.map((j, i) => (
+        <button type="button" role="tab" id={`onglet-${j.id}`} aria-controls={`panneau-${j.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>{j.nom}</button>
+      ))}
+    </div>
+
+    {PROS.map((j, i) => (
+      <section class="jeu" role="tabpanel" id={`panneau-${j.id}`} aria-labelledby={`onglet-${j.id}`} hidden={i !== 0}>
+        <div class="defile">
+          <table>
+            <caption class="visuellement-cache">Réglages des pros sur {j.nom}</caption>
+            <thead>
+              <tr>
+                <th scope="col">Joueur</th>
+                <th scope="col">DPI</th>
+                <th scope="col">Sensibilité</th>
+                {j.id === 'apex' && <th scope="col">Visée (ADS)</th>}
+                <th scope="col">eDPI</th>
+                <th scope="col">cm/360</th>
+                {j.pros.some((p) => p.souris) && <th scope="col">Souris</th>}
+                <th scope="col">Source</th>
+                <th scope="col"><span class="visuellement-cache">Action</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {j.pros.map((p) => (
+                <tr>
+                  <th scope="row">
+                    <span class="joueur">{p.joueur}</span>
+                    {p.equipe && <span class="equipe">{p.equipe}</span>}
+                  </th>
+                  <td class="chiffre">{nb(p.dpi)}</td>
+                  <td class="chiffre">
+                    {j.id === 'fortnite'
+                      ? (p.sensY ? `${nb(p.sens, 1)} % / ${nb(p.sensY, 1)} %` : `${nb(p.sens, 1)} %`)
+                      : nb(p.sens, p.sens < 1 ? 3 : 2).replace(/0+$/, '').replace(/,$/, '')}
+                  </td>
+                  {j.id === 'apex' && <td class="chiffre">{nb(p.ads ?? 1, 2)}</td>}
+                  <td class="chiffre">{j.id === 'fortnite' ? nb((p.sens / 100) * p.dpi, 1) : nb(p.sens * p.dpi)}</td>
+                  <td class="chiffre fort">{nb(cm360(j.id, p.sens, p.dpi), 1)}</td>
+                  {j.pros.some((q) => q.souris) && <td class="souris">{p.souris ?? '—'}</td>}
+                  <td class="source"><a href={p.source.url} rel="noopener" target="_blank">{p.source.nom}</a>, {p.source.date}</td>
+                  <td><a class="comparer" href={comparer(j.id, p.sens, p.dpi)}>Comparer</a></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    ))}
+
+    <aside class="note">
+      <h2>À garder en tête</h2>
+      <p>
+        Copier la sensibilité d'un pro est un bon point de départ, pas une garantie : elle dépend de la taille de
+        ton tapis, de ta prise en main et de ton rôle dans le jeu. Essaie-la quelques jours avant de juger.
+      </p>
+      <p>
+        Les pros modifient régulièrement leurs réglages et les sources ne sont pas toujours à jour :
+        vérifie sur la source indiquée avant de recopier une valeur à la décimale près.
+        Call of Duty et Battlefield arriveront quand des relevés fiables seront disponibles.
+      </p>
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .onglets { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .onglets button {
+    position: relative;
+    font: 700 var(--t-l)/1 var(--titre); font-style: italic;
+    color: var(--gris); background: none; border: 0; cursor: pointer;
+    padding: 0.7rem 1.1rem;
+  }
+  .onglets button::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    transform: skewX(-14deg);
+    background: var(--plaque); box-shadow: inset 0 0 0 1px var(--trait);
+  }
+  .onglets button[aria-selected='true'] { color: #fff; }
+  .onglets button[aria-selected='true']::before { background: linear-gradient(100deg, var(--magenta), var(--violet)); box-shadow: var(--lueur-magenta); }
+  .onglets button:hover { color: var(--texte); }
+
+  table { min-width: 52rem; }
+  tbody th { font-weight: 400; }
+  .joueur { display: block; font-family: var(--titre); font-weight: 700; font-size: var(--t-l); }
+  .equipe { display: block; color: var(--gris); font-size: var(--t-xs); }
+  td.chiffre { font-size: var(--t-l); }
+  td.fort { color: var(--cyan); text-shadow: var(--lueur-cyan); }
+  .souris, .source { color: var(--gris); font-size: var(--t-s); }
+  tbody tr:hover { background: rgb(139 92 255 / 0.08); }
+  .comparer {
+    font-family: var(--titre); font-weight: 600; white-space: nowrap;
+    padding: 0.35rem 0.7rem; border: 1px solid var(--cyan); border-radius: var(--rayon);
+    text-decoration: none;
+  }
+  .comparer:hover { box-shadow: var(--lueur-cyan); }
+  .note { margin-top: 2.5rem; max-width: 46rem; }
+  .note h2 { font-size: var(--t-xl); font-style: italic; }
+  .note p { color: var(--gris); }
+</style>
+
+<script>
+  const onglets = [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+  function activer(o: HTMLButtonElement, focus = false) {
+    for (const t of onglets) {
+      const actif = t === o;
+      t.setAttribute('aria-selected', String(actif));
+      t.tabIndex = actif ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')!)!.hidden = !actif;
+    }
+    if (focus) o.focus();
+    try { localStorage.setItem('fragx.pros.onglet', o.id); } catch { /* indisponible */ }
+  }
+  onglets.forEach((o, i) => {
+    o.addEventListener('click', () => activer(o));
+    o.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') activer(onglets[(i + 1) % onglets.length], true);
+      if (e.key === 'ArrowLeft') activer(onglets[(i - 1 + onglets.length) % onglets.length], true);
+    });
+  });
+  try {
+    const memo = localStorage.getItem('fragx.pros.onglet');
+    const o = onglets.find((t) => t.id === memo);
+    if (o) activer(o);
+  } catch { /* indisponible */ }
+</script>

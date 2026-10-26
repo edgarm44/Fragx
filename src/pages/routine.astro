@@ -1,0 +1,292 @@
+---
+import Base from '../layouts/Base.astro';
+import { lien } from '../lib/lien';
+
+const etapes = [
+  { id: 'reflexes', nom: 'Échauffement : réflexes', detail: 'Une série de 5 essais pour réveiller la main et les yeux.', cible: 1, href: '/reflexes' },
+  { id: 'vitesse', nom: 'Vitesse', detail: 'Deux séries de 30 cibles. Vise la régularité avant la vitesse.', cible: 2, href: '/visee?mode=vitesse' },
+  { id: 'precision', nom: 'Précision', detail: 'Deux séries de 30 secondes. Chaque tir manqué coûte des points : ne te précipite pas.', cible: 2, href: '/visee?mode=precision' },
+  { id: 'suivi', nom: 'Suivi de cible', detail: 'Deux séries de 30 secondes, le bras détendu.', cible: 2, href: '/visee?mode=suivi' },
+  { id: 'jeu', nom: 'Retour en jeu', detail: '5 minutes dans le mode entraînement de ton jeu, avec la même sensibilité. Coche quand c\'est fait.', cible: 1, href: '' },
+];
+---
+<Base title="Routine d'entraînement" description="Un programme de visée de 15 minutes par jour, avec le suivi de ta série de jours et de ta progression.">
+  <div class="conteneur en-tete-page">
+    <h1>Routine d'entraînement</h1>
+    <p class="chapo">
+      Quinze minutes par jour, dans l'ordre. Les étapes se cochent toutes seules quand tu termines un exercice
+      sur Fragx. Mieux vaut un peu chaque jour qu'une longue séance par semaine.
+    </p>
+  </div>
+
+  <div class="conteneur disposition">
+    <section aria-labelledby="t-jour">
+      <div class="tete-jour">
+        <h2 id="t-jour">Aujourd'hui</h2>
+        <p class="serie"><span class="chiffre" id="serie">0</span> <span id="serie-lib">jour d'affilée</span></p>
+      </div>
+      <ol class="etapes">
+        {etapes.map((e, i) => (
+          <li class="etape" data-etape={e.id} data-cible={e.cible}>
+            <span class="num chiffre" aria-hidden="true">{i + 1}</span>
+            <div class="corps">
+              <h3>{e.nom}</h3>
+              <p>{e.detail}</p>
+            </div>
+            <div class="action">
+              {e.href ? (
+                <>
+                  <span class="compte"><span class="fait">0</span>/{e.cible}</span>
+                  <a class="bouton bouton-secondaire" href={lien(e.href)}>Lancer</a>
+                </>
+              ) : (
+                <label class="case"><input type="checkbox" id="case-jeu" /> Fait</label>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="bravo" id="bravo" hidden>Routine terminée pour aujourd'hui. Reviens demain pour prolonger ta série.</p>
+    </section>
+
+    <section class="progression" aria-labelledby="t-prog">
+      <h2 id="t-prog">Ta progression</h2>
+      <p class="vide" id="vide">Fais ta première routine : ta progression sur les 14 derniers jours d'entraînement apparaîtra ici.</p>
+      <div class="graphiques" id="graphiques"></div>
+      <p class="aide-prog">Meilleur score de chaque jour, sur cet appareil uniquement.</p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .disposition { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 2.5rem; align-items: start; padding-bottom: 2rem; }
+  h2 { font-style: italic; }
+  .tete-jour { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  .serie { margin: 0; color: var(--gris); }
+  .serie .chiffre { font-size: var(--t-2xl); color: var(--magenta); text-shadow: var(--lueur-magenta); }
+
+  .etapes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+  .etape {
+    display: grid; grid-template-columns: 2.75rem 1fr auto; gap: 1rem; align-items: center;
+    padding: 1rem 1.1rem;
+    background: linear-gradient(90deg, rgb(30 20 71 / 0.9), rgb(18 11 46 / 0.75));
+    border: 1px solid var(--trait);
+    border-left: 3px solid var(--trait);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+  }
+  .etape[data-ok] { border-left-color: var(--ok); }
+  .num {
+    width: 2.75rem; height: 2.75rem; display: grid; place-items: center;
+    font-size: var(--t-xl); font-style: italic; color: var(--gris);
+    border: 1px solid var(--trait); transform: skewX(-10deg);
+  }
+  .etape[data-ok] .num { color: #04121a; background: var(--ok); border-color: var(--ok); }
+  .corps h3 { font-size: var(--t-l); margin: 0 0 0.2rem; }
+  .corps p { margin: 0; color: var(--gris); font-size: var(--t-s); }
+  .action { display: flex; align-items: center; gap: 0.9rem; }
+  .compte { font-family: var(--titre); font-weight: 700; color: var(--gris); font-variant-numeric: tabular-nums; }
+  .etape[data-ok] .compte { color: var(--ok); }
+  .action .bouton { padding: 0.6em 1.1em; font-size: var(--t-s); }
+  .case { display: flex; align-items: center; gap: 0.5rem; margin: 0; cursor: pointer; font-weight: 600; }
+  .case input { width: 1.2rem; height: 1.2rem; }
+  .bravo { margin-top: 1rem; color: var(--ok); font-weight: 600; }
+
+  .progression { position: sticky; top: 5.5rem; }
+  .vide, .aide-prog { color: var(--gris); }
+  .aide-prog { font-size: var(--t-xs); }
+  .graphiques { display: grid; gap: 1rem; }
+  .graphiques :global(figure) { margin: 0; }
+  .graphiques :global(figcaption) { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; margin-bottom: 0.25rem; }
+  .graphiques :global(.g-nom) { font-family: var(--titre); font-weight: 600; }
+  .graphiques :global(.g-val) { font-family: var(--titre); font-weight: 700; color: var(--texte); font-variant-numeric: tabular-nums; }
+  .graphiques :global(.g-evol) { font-size: var(--t-xs); color: var(--gris); }
+  .graphiques :global(.g-evol[data-sens='mieux']) { color: var(--ok); }
+  .graphiques :global(svg) { width: 100%; height: auto; display: block; overflow: visible; }
+  .graphiques :global(.bulle) {
+    position: absolute; pointer-events: none; transform: translate(-50%, -120%);
+    background: var(--plaque-haute); border: 1px solid var(--trait); border-radius: var(--rayon);
+    padding: 0.25rem 0.5rem; font-size: var(--t-xs); white-space: nowrap; color: var(--texte);
+  }
+  .graphiques :global(.zone-g) { position: relative; }
+
+  @media (max-width: 60rem) {
+    .disposition { grid-template-columns: 1fr; }
+    .progression { position: static; }
+  }
+  @media (max-width: 34rem) {
+    .etape { grid-template-columns: 2.5rem 1fr; }
+    .action { grid-column: 2; }
+  }
+</style>
+
+<script>
+  import { lireHistorique, jour, PLUS_BAS_MEILLEUR, type Exercice } from '../lib/historique';
+
+  const CLE_MANUEL = 'fragx.routine.jeu';
+  const EXERCICES: { id: Exercice; nom: string; unite: (v: number) => string }[] = [
+    { id: 'reflexes', nom: 'Réflexes', unite: (v) => `${Math.round(v)} ms` },
+    { id: 'vitesse', nom: 'Vitesse', unite: (v) => `${(v / 1000).toFixed(2).replace('.', ',')} s` },
+    { id: 'precision', nom: 'Précision', unite: (v) => `${Math.round(v)} pts` },
+    { id: 'suivi', nom: 'Suivi', unite: (v) => `${Math.round(v)} %` },
+  ];
+  const CIBLES: Record<Exercice, number> = { reflexes: 1, vitesse: 2, precision: 2, suivi: 2 };
+
+  function lireManuel(): string[] {
+    try { const v = JSON.parse(localStorage.getItem(CLE_MANUEL) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
+  }
+  function ecrireManuel(jours: string[]) {
+    try { localStorage.setItem(CLE_MANUEL, JSON.stringify(jours.slice(-400))); } catch { /* indisponible */ }
+  }
+
+  const h = lireHistorique();
+  const aujourdHui = jour();
+
+  // Nombre de séries par jour et par exercice
+  const parJour = new Map<string, Record<Exercice, number>>();
+  for (const ex of Object.keys(h) as Exercice[]) {
+    for (const e of h[ex]) {
+      const j = jour(e.t);
+      const r = parJour.get(j) ?? { reflexes: 0, vitesse: 0, precision: 0, suivi: 0 };
+      r[ex]++;
+      parJour.set(j, r);
+    }
+  }
+  const manuel = new Set(lireManuel());
+
+  function jourComplet(j: string): boolean {
+    const r = parJour.get(j);
+    if (!r || !manuel.has(j)) return false;
+    return (Object.keys(CIBLES) as Exercice[]).every((ex) => r[ex] >= CIBLES[ex]);
+  }
+
+  function majEtapes() {
+    const r = parJour.get(aujourdHui) ?? { reflexes: 0, vitesse: 0, precision: 0, suivi: 0 };
+    let toutes = true;
+    for (const li of document.querySelectorAll<HTMLElement>('[data-etape]')) {
+      const id = li.dataset.etape!;
+      let ok: boolean;
+      if (id === 'jeu') ok = manuel.has(aujourdHui);
+      else {
+        const fait = r[id as Exercice];
+        li.querySelector('.fait')!.textContent = String(Math.min(fait, CIBLES[id as Exercice]));
+        ok = fait >= CIBLES[id as Exercice];
+      }
+      li.toggleAttribute('data-ok', ok);
+      toutes &&= ok;
+    }
+    document.getElementById('bravo')!.hidden = !toutes;
+  }
+
+  function majSerie() {
+    let n = 0;
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    if (!jourComplet(jour(d.getTime()))) d.setDate(d.getDate() - 1);
+    while (jourComplet(jour(d.getTime()))) { n++; d.setDate(d.getDate() - 1); }
+    document.getElementById('serie')!.textContent = String(n);
+    document.getElementById('serie-lib')!.textContent = n > 1 ? 'jours d\'affilée' : 'jour d\'affilée';
+  }
+
+  const caseJeu = document.getElementById('case-jeu') as HTMLInputElement;
+  caseJeu.checked = manuel.has(aujourdHui);
+  caseJeu.addEventListener('change', () => {
+    if (caseJeu.checked) manuel.add(aujourdHui); else manuel.delete(aujourdHui);
+    ecrireManuel([...manuel].sort());
+    majEtapes();
+    majSerie();
+  });
+
+  // --- Graphiques de progression (une courbe par exercice) ---------------
+  const SVG = 'http://www.w3.org/2000/svg';
+  const date = (j: string) => new Date(j + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+
+  function graphique(ex: (typeof EXERCICES)[number]): HTMLElement | null {
+    const meilleurParJour = new Map<string, number>();
+    const basMieux = PLUS_BAS_MEILLEUR[ex.id];
+    for (const e of h[ex.id]) {
+      const j = jour(e.t);
+      const v = meilleurParJour.get(j);
+      if (v === undefined || (basMieux ? e.score < v : e.score > v)) meilleurParJour.set(j, e.score);
+    }
+    const points = [...meilleurParJour.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(-14);
+    if (!points.length) return null;
+
+    const fig = document.createElement('figure');
+    const cap = document.createElement('figcaption');
+    const dernier = points[points.length - 1][1];
+    const premier = points[0][1];
+    const nom = document.createElement('span'); nom.className = 'g-nom'; nom.textContent = ex.nom;
+    const droite = document.createElement('span');
+    const val = document.createElement('span'); val.className = 'g-val'; val.textContent = ex.unite(dernier);
+    droite.append(val);
+    if (points.length > 1) {
+      const ecart = dernier - premier;
+      const mieux = basMieux ? ecart < 0 : ecart > 0;
+      const evol = document.createElement('span');
+      evol.className = 'g-evol';
+      evol.dataset.sens = mieux ? 'mieux' : 'moins';
+      evol.textContent = ` ${ecart === 0 ? 'stable' : (mieux ? 'en progrès' : 'en recul')} depuis le ${date(points[0][0])}`;
+      droite.append(evol);
+    }
+    cap.append(nom, droite);
+
+    const zone = document.createElement('div');
+    zone.className = 'zone-g';
+    const L = 320, H = 80, M = 6;
+    const svg = document.createElementNS(SVG, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${L} ${H}`);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', `${ex.nom} : ${points.map(([j, v]) => `${date(j)} ${ex.unite(v)}`).join(', ')}`);
+    const valeurs = points.map(([, v]) => v);
+    let min = Math.min(...valeurs), max = Math.max(...valeurs);
+    if (min === max) { min -= 1; max += 1; }
+    const x = (i: number) => (points.length === 1 ? L / 2 : M + (i * (L - 2 * M)) / (points.length - 1));
+    // Haut du graphique = meilleur score, quel que soit le sens de l'exercice
+    const y = (v: number) => { const r = (v - min) / (max - min); return M + (basMieux ? r : 1 - r) * (H - 2 * M); };
+
+    const base = document.createElementNS(SVG, 'line');
+    base.setAttribute('x1', '0'); base.setAttribute('x2', String(L)); base.setAttribute('y1', String(H - 0.5)); base.setAttribute('y2', String(H - 0.5));
+    base.setAttribute('stroke', '#33266b'); base.setAttribute('stroke-width', '1');
+    svg.append(base);
+
+    if (points.length > 1) {
+      const ligne = document.createElementNS(SVG, 'polyline');
+      ligne.setAttribute('points', points.map(([, v], i) => `${x(i)},${y(v)}`).join(' '));
+      ligne.setAttribute('fill', 'none'); ligne.setAttribute('stroke', '#19e3ff'); ligne.setAttribute('stroke-width', '2');
+      ligne.setAttribute('vector-effect', 'non-scaling-stroke'); ligne.setAttribute('stroke-linejoin', 'round');
+      svg.append(ligne);
+    }
+    const bulle = document.createElement('span');
+    bulle.className = 'bulle'; bulle.hidden = true;
+    points.forEach(([j, v], i) => {
+      const c = document.createElementNS(SVG, 'circle');
+      c.setAttribute('cx', String(x(i))); c.setAttribute('cy', String(y(v)));
+      c.setAttribute('r', '4'); c.setAttribute('fill', '#19e3ff'); c.setAttribute('stroke', '#150d36'); c.setAttribute('stroke-width', '2');
+      c.setAttribute('vector-effect', 'non-scaling-stroke');
+      // zone de survol plus large que le point
+      const cible = document.createElementNS(SVG, 'rect');
+      const w = points.length === 1 ? L : (L - 2 * M) / (points.length - 1);
+      cible.setAttribute('x', String(x(i) - w / 2)); cible.setAttribute('y', '0'); cible.setAttribute('width', String(w)); cible.setAttribute('height', String(H));
+      cible.setAttribute('fill', 'transparent');
+      cible.addEventListener('pointerenter', () => {
+        bulle.textContent = `${date(j)} : ${ex.unite(v)}`;
+        bulle.style.left = `${(x(i) / L) * 100}%`;
+        bulle.style.top = `${(y(v) / H) * 100}%`;
+        bulle.hidden = false;
+      });
+      cible.addEventListener('pointerleave', () => { bulle.hidden = true; });
+      svg.append(c, cible);
+    });
+    zone.append(svg, bulle);
+    fig.append(cap, zone);
+    return fig;
+  }
+
+  const conteneur = document.getElementById('graphiques')!;
+  const figures = EXERCICES.map(graphique).filter((f): f is HTMLElement => f !== null);
+  conteneur.replaceChildren(...figures);
+  document.getElementById('vide')!.hidden = figures.length > 0;
+
+  majEtapes();
+  majSerie();
+</script>

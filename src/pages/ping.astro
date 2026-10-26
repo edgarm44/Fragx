@@ -1,0 +1,219 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Ping et connexion" description="Mesure la latence, la gigue et les pertes de ta connexion depuis le navigateur, avec des conseils pour jouer en ligne.">
+  <div class="conteneur en-tete-page">
+    <h1>Ping et connexion</h1>
+    <p class="chapo">
+      Le test envoie 30 petites requêtes à des serveurs proches de toi et mesure le temps de réponse.
+      Lance-le pendant que personne ne télécharge ou ne regarde de vidéo sur ta connexion.
+    </p>
+  </div>
+
+  <div class="conteneur">
+    <div class="tableau panneau">
+      <div class="indicateurs">
+        <div class="indicateur principal">
+          <span class="libelle">Latence</span>
+          <span class="chiffre" id="latence">--</span>
+          <span class="verdict" id="v-latence"></span>
+        </div>
+        <div class="indicateur">
+          <span class="libelle">Gigue</span>
+          <span class="chiffre" id="gigue">--</span>
+          <span class="verdict" id="v-gigue"></span>
+        </div>
+        <div class="indicateur">
+          <span class="libelle">Pertes</span>
+          <span class="chiffre" id="pertes">--</span>
+          <span class="verdict" id="v-pertes"></span>
+        </div>
+      </div>
+      <div class="barres" id="barres" aria-hidden="true"></div>
+      <div class="actions">
+        <button class="bouton bouton-principal" type="button" id="lancer">Lancer le test</button>
+        <span class="etat" id="etat" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <p class="info-reseau" id="info-reseau" hidden></p>
+
+    <section class="conseils" id="conseils" hidden aria-live="polite">
+      <h2>Ce qu'on te conseille</h2>
+      <ul id="liste-conseils"></ul>
+    </section>
+
+    <aside class="explication">
+      <h2>À savoir</h2>
+      <p>
+        <strong>Latence</strong> : temps d'un aller-retour jusqu'au serveur. En dessous de 30 ms c'est excellent,
+        jusqu'à 60 ms c'est bon pour tous les jeux de tir.
+        <strong>Gigue</strong> : variation de la latence d'une mesure à l'autre. C'est elle qui donne l'impression
+        de « téléportations » en jeu ; au-delà de 15 ms, la connexion est instable.
+        <strong>Pertes</strong> : requêtes sans réponse.
+      </p>
+      <p>
+        Un navigateur ne peut pas contacter directement les serveurs d'un jeu : ce test mesure la qualité de ta
+        connexion jusqu'à des serveurs proches. Ton ping en jeu dépend aussi de la distance jusqu'au serveur
+        du jeu, il peut donc être un peu plus élevé.
+      </p>
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .tableau { display: grid; gap: 1.5rem; }
+  .indicateurs { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 1.5rem; }
+  .indicateur { display: grid; gap: 0.3rem; align-content: start; }
+  .libelle { color: var(--gris); font-size: var(--t-s); }
+  .indicateur .chiffre { font-size: var(--t-3xl); }
+  .principal .chiffre { font-size: var(--t-4xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
+  .verdict { font-size: var(--t-s); font-weight: 600; min-height: 1.4em; }
+  .verdict[data-n='bon'] { color: var(--ok); }
+  .verdict[data-n='moyen'] { color: #ffd15c; }
+  .verdict[data-n='mauvais'] { color: var(--alerte); }
+
+  .barres {
+    height: 110px;
+    display: flex; align-items: flex-end; gap: 3px;
+    border-bottom: 1px solid var(--trait);
+    padding-bottom: 2px;
+  }
+  .barres :global(span) {
+    flex: 1; min-width: 4px;
+    background: linear-gradient(to top, var(--violet), var(--cyan));
+    border-radius: 1px 1px 0 0;
+  }
+  .barres :global(span.perdu) { background: var(--alerte); height: 100% !important; opacity: 0.6; }
+  .actions { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+  .etat { color: var(--gris); }
+  .info-reseau { color: var(--gris); margin-top: 1rem; }
+  .conseils { margin-top: 2rem; }
+  .conseils h2, .explication h2 { font-size: var(--t-xl); font-style: italic; }
+  .conseils ul { padding-left: 1.2rem; display: grid; gap: 0.5rem; }
+  .explication { margin-top: 2rem; }
+  .explication p { color: var(--gris); }
+  .explication strong { color: var(--texte); }
+  @media (max-width: 40rem) { .indicateurs { grid-template-columns: 1fr 1fr; } .principal { grid-column: 1 / -1; } }
+</style>
+
+<script>
+  // Serveurs de mesure : CDN présents dans la plupart des pays, réponses vides.
+  // Requêtes en mode « no-cors » : on ne lit pas la réponse, on ne mesure que le temps.
+  const CIBLES = [
+    'https://www.cloudflare.com/cdn-cgi/trace',
+    'https://www.google.com/generate_204',
+  ];
+  const NB = 30;
+  const DELAI_MAX = 2000;
+
+  const btn = document.getElementById('lancer') as HTMLButtonElement;
+  const etat = document.getElementById('etat')!;
+  const barres = document.getElementById('barres')!;
+
+  function niveau(el: HTMLElement, n: 'bon' | 'moyen' | 'mauvais', texte: string) {
+    el.dataset.n = n;
+    el.textContent = texte;
+  }
+
+  async function mesurer(url: string): Promise<number | null> {
+    const controle = new AbortController();
+    const minuterie = setTimeout(() => controle.abort(), DELAI_MAX);
+    const debut = performance.now();
+    try {
+      await fetch(`${url}?fragx=${Math.random().toString(36).slice(2)}`, { mode: 'no-cors', cache: 'no-store', signal: controle.signal });
+      return performance.now() - debut;
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(minuterie);
+    }
+  }
+
+  async function choisirCible(): Promise<string | null> {
+    // Préchauffage (résolution DNS + connexion sécurisée), puis on garde le serveur le plus rapide
+    let meilleure: string | null = null;
+    let meilleurTemps = Infinity;
+    for (const c of CIBLES) {
+      await mesurer(c);
+      const t = await mesurer(c);
+      if (t !== null && t < meilleurTemps) { meilleurTemps = t; meilleure = c; }
+    }
+    return meilleure;
+  }
+
+  function mediane(v: number[]) { const t = [...v].sort((a, b) => a - b); return t[Math.floor(t.length / 2)]; }
+
+  async function lancer() {
+    btn.disabled = true;
+    barres.replaceChildren();
+    for (const id of ['latence', 'gigue', 'pertes']) document.getElementById(id)!.textContent = '--';
+    for (const id of ['v-latence', 'v-gigue', 'v-pertes']) { const e = document.getElementById(id)!; e.textContent = ''; delete e.dataset.n; }
+    document.getElementById('conseils')!.hidden = true;
+    etat.textContent = 'Préparation…';
+
+    const cible = await choisirCible();
+    if (!cible) {
+      etat.textContent = 'Aucun serveur de mesure n\'a répondu. Vérifie ta connexion, ou un bloqueur de publicités qui filtrerait ces adresses, puis relance.';
+      btn.disabled = false;
+      return;
+    }
+
+    const temps: (number | null)[] = [];
+    for (let i = 0; i < NB; i++) {
+      const t = await mesurer(cible);
+      temps.push(t);
+      const barre = document.createElement('span');
+      if (t === null) barre.className = 'perdu';
+      else barre.style.height = `${Math.min(100, (t / 150) * 100)}%`;
+      barres.append(barre);
+      etat.textContent = `Mesure ${i + 1} sur ${NB}`;
+      const valides = temps.filter((x): x is number => x !== null);
+      if (valides.length) document.getElementById('latence')!.textContent = `${Math.round(mediane(valides))} ms`;
+      await new Promise((r) => setTimeout(r, 80));
+    }
+
+    const valides = temps.filter((x): x is number => x !== null);
+    const perdus = temps.length - valides.length;
+    const lat = valides.length ? mediane(valides) : NaN;
+    let gigue = 0;
+    for (let i = 1; i < valides.length; i++) gigue += Math.abs(valides[i] - valides[i - 1]);
+    gigue = valides.length > 1 ? gigue / (valides.length - 1) : NaN;
+    const pctPertes = (perdus / temps.length) * 100;
+
+    document.getElementById('latence')!.textContent = Number.isFinite(lat) ? `${Math.round(lat)} ms` : '--';
+    document.getElementById('gigue')!.textContent = Number.isFinite(gigue) ? `${Math.round(gigue)} ms` : '--';
+    document.getElementById('pertes')!.textContent = `${Math.round(pctPertes)} %`;
+
+    const vL = document.getElementById('v-latence')!, vG = document.getElementById('v-gigue')!, vP = document.getElementById('v-pertes')!;
+    if (lat < 30) niveau(vL, 'bon', 'Excellente'); else if (lat < 60) niveau(vL, 'bon', 'Bonne'); else if (lat < 100) niveau(vL, 'moyen', 'Moyenne'); else niveau(vL, 'mauvais', 'Élevée');
+    if (gigue < 5) niveau(vG, 'bon', 'Très stable'); else if (gigue < 15) niveau(vG, 'moyen', 'Correcte'); else niveau(vG, 'mauvais', 'Instable');
+    if (perdus === 0) niveau(vP, 'bon', 'Aucune'); else if (pctPertes <= 5) niveau(vP, 'moyen', 'Quelques pertes'); else niveau(vP, 'mauvais', 'Importantes');
+
+    const conseils: string[] = [];
+    const reseau = (navigator as Navigator & { connection?: { type?: string } }).connection;
+    if (gigue >= 5 || perdus > 0) conseils.push('Si tu joues en Wi-Fi, passe sur un câble Ethernet : c\'est le moyen le plus sûr de réduire la gigue et les pertes.');
+    if (lat >= 60) conseils.push('Latence élevée : vérifie qu\'aucun téléchargement (mise à jour de jeu, cloud, streaming) ne tourne, puis relance le test.');
+    if (perdus > 0) conseils.push('Des pertes répétées peuvent venir de la box : redémarre-la, et contacte ton fournisseur si le problème persiste.');
+    if (lat >= 30) conseils.push('Dans le jeu, choisis le serveur ou la région la plus proche de chez toi.');
+    if (!conseils.length) conseils.push('Ta connexion est prête pour le jeu en ligne. Si tu as quand même des problèmes, ils viennent plutôt du serveur du jeu ou de ton PC.');
+    if (reseau?.type === 'wifi' && !conseils[0].includes('Wi-Fi')) conseils.unshift('Ton navigateur indique une connexion Wi-Fi : un câble Ethernet donnera une latence plus régulière.');
+    document.getElementById('liste-conseils')!.replaceChildren(...conseils.map((c) => { const li = document.createElement('li'); li.textContent = c; return li; }));
+    document.getElementById('conseils')!.hidden = false;
+
+    etat.textContent = `Test terminé (${valides.length} réponses sur ${NB}).`;
+    btn.textContent = 'Relancer le test';
+    btn.disabled = false;
+  }
+
+  btn.addEventListener('click', lancer);
+
+  const reseau = (navigator as Navigator & { connection?: { effectiveType?: string; downlink?: number; type?: string } }).connection;
+  if (reseau && (reseau.downlink || reseau.type)) {
+    const info = document.getElementById('info-reseau')!;
+    const morceaux = [];
+    if (reseau.type && reseau.type !== 'unknown') morceaux.push(`type ${reseau.type === 'wifi' ? 'Wi-Fi' : reseau.type === 'ethernet' ? 'Ethernet' : reseau.type}`);
+    if (reseau.downlink) morceaux.push(`débit estimé ${reseau.downlink >= 10 ? '10 Mb/s ou plus' : reseau.downlink + ' Mb/s'}`);
+    if (morceaux.length) { info.textContent = `Ton navigateur indique : ${morceaux.join(', ')}.`; info.hidden = false; }
+  }
+</script>

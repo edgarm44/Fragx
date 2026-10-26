@@ -7,9 +7,11 @@ import Footer from '../components/Footer.astro';
 interface Props {
   title: string;
   description?: string;
+  /** Anime le sol de l'arène (accueil uniquement : évite de fausser les mesures ailleurs) */
+  anime?: boolean;
 }
 
-const { title, description = 'Diagnostic du setup, benchmark, conversion de sensibilité et entraînement de visée pour les joueurs de FPS. Gratuit et sans compte.' } = Astro.props;
+const { title, anime = false, description = 'Diagnostic du setup, benchmark, conversion de sensibilité et entraînement de visée pour les joueurs de FPS. Gratuit et sans compte.' } = Astro.props;
 const pageTitle = title === 'Fragx' ? 'Fragx — progresse sur les jeux de tir' : `${title} — Fragx`;
 ---
 <!doctype html>
@@ -23,10 +25,11 @@ const pageTitle = title === 'Fragx' ? 'Fragx — progresse sur les jeux de tir' 
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#14172b" />
+    <meta name="theme-color" content="#0b0620" />
     <title>{pageTitle}</title>
   </head>
-  <body>
+  <body data-anime={anime ? '' : undefined}>
+    <div class="fond-arene" aria-hidden="true"><div class="fond-sol"></div></div>
     <a class="evitement" href="#contenu">Aller au contenu</a>
     <Header />
     <main id="contenu">
@@ -41,8 +44,8 @@ const pageTitle = title === 'Fragx' ? 'Fragx — progresse sur les jeux de tir' 
     position: absolute;
     left: 1rem;
     top: -3rem;
-    background: var(--ambre);
-    color: #1a1405;
+    background: var(--cyan);
+    color: #0b0620;
     padding: 0.5rem 0.75rem;
     border-radius: var(--rayon);
     z-index: 10;

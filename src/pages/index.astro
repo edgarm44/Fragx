@@ -2,75 +2,58 @@
 import { lien } from '../lib/lien';
 import Base from '../layouts/Base.astro';
 import FrameMeter from '../components/FrameMeter.astro';
+import { CATEGORIES } from '../data/navigation';
 import { JEUX_COUVERTS } from '../data/jeux';
 
-const outils = [
-  {
-    href: '/setup',
-    nom: 'Diagnostic du setup',
-    texte: 'Détecte ce que ton navigateur peut lire de ton PC, complète le reste, et repère ce qui te freine : écran, RAM, souris, connexion.',
-    duree: '3 min',
-  },
-  {
-    href: '/benchmark',
-    nom: 'Benchmark navigateur',
-    texte: 'Charge ton processeur graphique par paliers jusqu\'à ce qu\'il décroche, et donne un score à comparer.',
-    duree: '1 min',
-  },
-  {
-    href: '/sensibilite',
-    nom: 'Convertisseur de sensibilité',
-    texte: 'Garde exactement la même visée en passant de Valorant à Apex ou à Fortnite, avec le cm/360 et l\'eDPI.',
-    duree: '30 s',
-  },
-  {
-    href: '/visee',
-    nom: 'Entraînement de visée',
-    texte: 'Trois exercices courts pour la vitesse, la précision et le suivi de cible. Tes records restent sur ton appareil.',
-    duree: '1 min par exercice',
-  },
-  {
-    href: '/guides',
-    nom: 'Guides',
-    texte: 'Réglages Windows, pilotes et paramètres en jeu expliqués simplement, jeu par jeu.',
-    duree: 'Lecture',
-  },
-];
+const accroches: Record<string, string> = {
+  materiel: 'Ton PC tient-il la cadence ?',
+  visee: 'Ta main est-elle prête ?',
+  apprendre: 'Ce que font les meilleurs',
+};
 ---
-<Base title="Fragx">
+<Base title="Fragx" anime>
   <section class="conteneur accroche">
     <div class="texte">
       <h1>Règle ton PC et ta visée avant la prochaine partie.</h1>
       <p class="chapo">
-        Diagnostic du setup, test de performance, conversion de sensibilité et entraînement de visée.
+        Diagnostic du setup, tests de souris, d'écran et de connexion, entraînement de visée et réglages des pros.
         Gratuit, sans compte, directement dans ton navigateur.
       </p>
       <div class="actions">
         <a class="bouton bouton-principal" href={lien('/setup')}>Diagnostiquer mon setup</a>
-        <a class="bouton bouton-secondaire" href={lien('/benchmark')}>Lancer le benchmark</a>
+        <a class="bouton bouton-secondaire" href={lien('/routine')}>Commencer la routine du jour</a>
       </div>
     </div>
     <FrameMeter />
   </section>
 
-  <section class="conteneur section" aria-labelledby="titre-outils">
-    <h2 id="titre-outils">Les outils</h2>
-    <ul class="outils">
-      {outils.map((o) => (
-        <li>
-          <a href={lien(o.href)}>
-            <span class="nom">{o.nom}</span>
-            <span class="desc">{o.texte}</span>
-            <span class="duree">{o.duree}</span>
-          </a>
-        </li>
-      ))}
-    </ul>
-  </section>
+  <div class="conteneur categories">
+    {CATEGORIES.map((c) => (
+      <section class="categorie" aria-labelledby={`cat-${c.id}`} data-cat={c.id}>
+        <header>
+          <h2 id={`cat-${c.id}`}>{c.nom}</h2>
+          <p>{accroches[c.id]}</p>
+        </header>
+        <ul>
+          {c.outils.map((o) => (
+            <li>
+              <a href={lien(o.href)}>
+                <span class="nom">{o.nom}</span>
+                <span class="desc">{o.texte}</span>
+                <span class="duree">{o.duree}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
 
   <section class="conteneur section jeux" aria-labelledby="titre-jeux">
-    <h2 id="titre-jeux">Pensé pour</h2>
-    <p class="liste-jeux">{JEUX_COUVERTS.join(', ')}.</p>
+    <h2 id="titre-jeux" class="visuellement-cache">Jeux couverts</h2>
+    <ul class="bandeau">
+      {JEUX_COUVERTS.map((j) => <li>{j}</li>)}
+    </ul>
     <p class="chapo">
       La recherche de statistiques par pseudo arrive dans une prochaine version,
       en commençant par Fortnite, Apex Legends et Battlefield.
@@ -84,38 +67,77 @@ const outils = [
     grid-template-columns: 1.15fr 1fr;
     gap: clamp(1.5rem, 5vw, 4rem);
     align-items: center;
-    padding-block: clamp(2.5rem, 8vw, 5.5rem) clamp(1.5rem, 4vw, 3rem);
+    padding-block: clamp(2.5rem, 8vw, 5.5rem) clamp(2rem, 5vw, 4rem);
   }
-  .texte h1 { max-width: 14ch; }
-  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.75rem; }
+  .texte h1 {
+    max-width: 15ch;
+    font-size: clamp(2.6rem, 6.2vw, 4.4rem);
+    line-height: 0.98;
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: 1rem 1.25rem; margin-top: 2rem; }
 
-  .outils { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--trait); }
-  .outils a {
+  .categories { display: grid; gap: clamp(2.5rem, 6vw, 4rem); padding-block: 1rem 2rem; }
+  .categorie {
     display: grid;
-    grid-template-columns: minmax(12rem, 16rem) 1fr auto;
-    gap: 0.25rem 2rem;
+    grid-template-columns: minmax(12rem, 17rem) 1fr;
+    gap: 1rem 2.5rem;
+    align-items: start;
+  }
+  .categorie header { position: sticky; top: 5.5rem; }
+  .categorie h2 {
+    font-size: var(--t-3xl);
+    font-style: italic;
+    margin-bottom: 0.3rem;
+  }
+  .categorie[data-cat='materiel'] h2 { color: var(--cyan); text-shadow: var(--lueur-cyan); }
+  .categorie[data-cat='visee'] h2 { color: var(--magenta); text-shadow: var(--lueur-magenta); }
+  .categorie[data-cat='apprendre'] h2 { color: #b79bff; text-shadow: 0 0 14px rgb(139 92 255 / 0.6); }
+  .categorie header p { color: var(--gris); margin: 0; }
+
+  .categorie ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--trait); }
+  .categorie a {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(11rem, 15rem) 1fr auto;
+    gap: 0.25rem 1.75rem;
     align-items: baseline;
-    padding: 1.25rem 0.25rem;
+    padding: 1.15rem 0.75rem;
     border-bottom: 1px solid var(--trait);
     text-decoration: none;
     color: var(--texte);
   }
-  .outils a:hover { background: var(--plaque); }
-  .outils a:hover .nom { color: var(--ambre); }
-  .nom { font-family: var(--titre); font-size: var(--t-xl); font-weight: 600; }
-  .desc { color: var(--gris); max-width: 60ch; }
+  .categorie a::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--degrade);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .categorie a:hover { background: linear-gradient(90deg, rgb(139 92 255 / 0.16), transparent 70%); }
+  .categorie a:hover::before { opacity: 1; }
+  .nom { font-family: var(--titre); font-size: var(--t-l); font-weight: 600; }
+  .desc { color: var(--gris); max-width: 58ch; }
   .duree { color: var(--gris); font-size: var(--t-s); white-space: nowrap; }
 
-  .liste-jeux {
-    font-family: var(--titre);
-    font-weight: 700;
-    font-size: clamp(var(--t-2xl), 4.5vw, var(--t-3xl));
-    line-height: 1.15;
-    max-width: 30ch;
+  .bandeau {
+    list-style: none; margin: 0 0 1.5rem; padding: 1.25rem 0;
+    display: flex; flex-wrap: wrap; gap: 0.5rem 2.5rem;
+    border-block: 1px solid var(--trait);
+  }
+  .bandeau li {
+    font-family: var(--titre); font-weight: 700; font-style: italic;
+    font-size: clamp(var(--t-xl), 3.6vw, var(--t-3xl));
+    color: transparent;
+    -webkit-text-stroke: 1px rgb(242 239 253 / 0.75);
+    line-height: 1.1;
   }
 
+  @media (max-width: 60rem) {
+    .categorie { grid-template-columns: 1fr; }
+    .categorie header { position: static; }
+  }
   @media (max-width: 52rem) {
     .accroche { grid-template-columns: 1fr; }
-    .outils a { grid-template-columns: 1fr; }
+    .categorie a { grid-template-columns: 1fr; }
   }
 </style>

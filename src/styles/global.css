@@ -1,23 +1,38 @@
 @import '@fontsource/barlow/400.css';
 @import '@fontsource/barlow/500.css';
 @import '@fontsource/barlow/600.css';
-@import '@fontsource/barlow-condensed/600.css';
-@import '@fontsource/barlow-condensed/700.css';
+@import '@fontsource/chakra-petch/600.css';
+@import '@fontsource/chakra-petch/700.css';
+@import '@fontsource/chakra-petch/700-italic.css';
 
+/* =========================================================================
+   Fragx — système visuel « esport néon »
+   Fond violet très sombre, deux néons (magenta et cyan) comme des projecteurs
+   de scène, angles coupés façon interface de jeu.
+   ========================================================================= */
 :root {
-  --nuit: #14172b;
-  --plaque: #1d2140;
-  --plaque-haute: #262a52;
-  --trait: #333866;
-  --texte: #eae9f4;
-  --gris: #a2a4c6;
-  --ambre: #ffb224;
-  --ambre-sombre: #3a2f1a;
-  --ok: #4fd8a6;
-  --alerte: #ff6b6b;
+  --fond: #0b0620;
+  --fond-haut: #120a32;
+  --plaque: #150d36;
+  --plaque-haute: #1e1447;
+  --trait: #33266b;
+  --texte: #f2effd;
+  --gris: #aaa3d2;
+
+  --magenta: #ff2e97;
+  --violet: #8b5cff;
+  --cyan: #19e3ff;
+  --accent: var(--cyan);
+  --accent-sombre: #0f3a52;
+  --ok: #3dfcb0;
+  --alerte: #ff4d6d;
+
+  --degrade: linear-gradient(100deg, var(--magenta) 0%, var(--violet) 50%, var(--cyan) 100%);
+  --lueur-cyan: 0 0 12px rgb(25 227 255 / 0.55), 0 0 32px rgb(25 227 255 / 0.25);
+  --lueur-magenta: 0 0 12px rgb(255 46 151 / 0.6), 0 0 32px rgb(255 46 151 / 0.3);
 
   --corps: 'Barlow', system-ui, sans-serif;
-  --titre: 'Barlow Condensed', 'Barlow', system-ui, sans-serif;
+  --titre: 'Chakra Petch', 'Barlow', system-ui, sans-serif;
 
   /* Échelle typographique, rapport 1,25 */
   --t-xs: 0.8rem;
@@ -29,20 +44,21 @@
   --t-3xl: 2.441rem;
   --t-4xl: 3.815rem;
 
-  --largeur: 72rem;
+  --largeur: 74rem;
   --gouttiere: clamp(1rem, 4vw, 2rem);
-  --rayon: 6px;
+  --rayon: 4px;
+  --coin: 14px;
+  --biseau: polygon(var(--coin) 0, 100% 0, 100% calc(100% - var(--coin)), calc(100% - var(--coin)) 100%, 0 100%, 0 var(--coin));
 
   color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-
 html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  background: var(--nuit);
+  background: var(--fond);
   isolation: isolate;
   color: var(--texte);
   font-family: var(--corps);
@@ -55,63 +71,98 @@ body {
 
 main {
   flex: 1;
-  /* coupe le réticule qui déborde à droite, sans barre de défilement */
+  /* coupe les décors qui débordent à droite, sans barre de défilement */
   overflow-x: clip;
 }
 
-/* --- Fond : carte tactique ---------------------------------------------
-   Couches fixes derrière tout le contenu :
-   1. halos de couleur (ambre en haut à gauche, violet à droite, vert en bas)
-   2. quadrillage de carte avec repères en croix (réticules), estompé vers le bas
-   3. lignes de balayage très légères et grain, façon écran de jeu */
+/* --- Fond : arène néon ---------------------------------------------------
+   1. projecteurs magenta (gauche) et cyan (droite) qui tombent du plafond
+   2. sol quadrillé en perspective, au bas de l'écran (.fond-arene, dans Base.astro)
+   3. trame d'écran et grain très légers */
 body::before,
 body::after {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: -1;
+  z-index: -2;
 }
-
 body::before {
   background:
-    radial-gradient(60rem 38rem at 8% -12%, rgb(255 178 36 / 0.13), transparent 62%),
-    radial-gradient(52rem 44rem at 102% 4%, rgb(118 98 255 / 0.20), transparent 60%),
-    radial-gradient(70rem 40rem at 50% 118%, rgb(79 216 166 / 0.07), transparent 60%),
-    linear-gradient(180deg, #171a33 0%, var(--nuit) 45%, #10122a 100%);
+    conic-gradient(from 160deg at 12% -8%, transparent 0deg, rgb(255 46 151 / 0.22) 14deg, rgb(255 46 151 / 0.05) 34deg, transparent 52deg),
+    conic-gradient(from 168deg at 88% -8%, transparent 0deg, rgb(25 227 255 / 0.05) 18deg, rgb(25 227 255 / 0.2) 38deg, transparent 54deg),
+    radial-gradient(50rem 30rem at 50% 108%, rgb(139 92 255 / 0.28), transparent 70%),
+    radial-gradient(40rem 26rem at 10% 0%, rgb(255 46 151 / 0.16), transparent 70%),
+    radial-gradient(40rem 26rem at 90% 0%, rgb(25 227 255 / 0.12), transparent 70%),
+    linear-gradient(180deg, var(--fond-haut) 0%, var(--fond) 55%, #08041a 100%);
 }
-
 body::after {
+  z-index: -1;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Cg stroke='%23ffb224' stroke-opacity='.35' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M96 89v5M96 98v5M89 96h5M98 96h5'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 192px 192px,
-    linear-gradient(rgb(160 166 255 / 0.07) 1px, transparent 1px) 0 0 / 48px 48px,
-    linear-gradient(90deg, rgb(160 166 255 / 0.07) 1px, transparent 1px) 0 0 / 48px 48px,
-    linear-gradient(rgb(160 166 255 / 0.06) 1px, transparent 1px) 0 0 / 192px 192px,
-    linear-gradient(90deg, rgb(160 166 255 / 0.06) 1px, transparent 1px) 0 0 / 192px 192px,
-    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 3px),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.09'/%3E%3C/svg%3E");
-  -webkit-mask-image: radial-gradient(ellipse 120% 85% at 50% 0%, #000 30%, rgb(0 0 0 / 0.35) 70%, transparent 100%);
-  mask-image: radial-gradient(ellipse 120% 85% at 50% 0%, #000 30%, rgb(0 0 0 / 0.35) 70%, transparent 100%);
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.022) 0 1px, transparent 1px 3px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.08'/%3E%3C/svg%3E");
 }
 
+.fond-arene {
+  position: fixed;
+  inset: auto 0 0 0;
+  height: 40vh;
+  perspective: 340px;
+  perspective-origin: 50% 0%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 92%);
+  mask-image: linear-gradient(to top, #000 10%, transparent 92%);
+}
+.fond-arene::before {
+  /* ligne d'horizon lumineuse */
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 2px;
+  background: var(--degrade);
+  opacity: 0.4;
+  box-shadow: 0 0 24px 4px rgb(139 92 255 / 0.35);
+}
+.fond-sol {
+  position: absolute;
+  left: -50%;
+  width: 200%;
+  top: 0;
+  height: 220%;
+  transform-origin: 50% 0;
+  transform: rotateX(72deg);
+  background:
+    linear-gradient(90deg, rgb(255 46 151 / 0.32) 1.5px, transparent 1.5px) 0 0 / 64px 64px,
+    linear-gradient(0deg, rgb(25 227 255 / 0.28) 1.5px, transparent 1.5px) 0 0 / 64px 64px;
+}
+body[data-anime] .fond-sol { animation: defilement 3.5s linear infinite; }
+@keyframes defilement { to { background-position: 0 64px, 0 64px; } }
+
+/* --- Typographie ------------------------------------------------------ */
 h1, h2, h3 {
   font-family: var(--titre);
   font-weight: 700;
   line-height: 1.05;
-  letter-spacing: 0.005em;
+  letter-spacing: -0.005em;
   margin: 0 0 0.5em;
 }
-h1 { font-size: clamp(var(--t-3xl), 6vw, var(--t-4xl)); }
+h1 {
+  font-size: clamp(var(--t-3xl), 6vw, var(--t-4xl));
+  font-style: italic;
+  text-shadow: 0 0 28px rgb(139 92 255 / 0.45);
+}
 h2 { font-size: var(--t-2xl); }
 h3 { font-size: var(--t-xl); font-weight: 600; }
 
 p { margin: 0 0 1em; max-width: 68ch; }
 
-a { color: var(--ambre); text-underline-offset: 0.18em; }
-a:hover { color: #ffc95e; }
+a { color: var(--cyan); text-underline-offset: 0.18em; }
+a:hover { color: #8ff2ff; }
 
 :focus-visible {
-  outline: 2px solid var(--ambre);
+  outline: 2px solid var(--cyan);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -125,12 +176,23 @@ a:hover { color: #ffc95e; }
 
 .chapo { font-size: var(--t-l); color: var(--gris); max-width: 56ch; }
 
-/* --- Réticule de lunette en filigrane ------------------------------------
-   Placé en haut de chaque page (.en-tete-page) et derrière le compteur de
-   l'accueil (.accroche). Un seul balayage lumineux au chargement. */
-.en-tete-page,
-.accroche { position: relative; }
+/* Barre néon sous les titres de page */
+.en-tete-page { position: relative; padding-block: clamp(2rem, 6vw, 3.5rem) 1.5rem; }
+.en-tete-page h1::after {
+  content: '';
+  display: block;
+  width: 5.5rem;
+  height: 4px;
+  margin-top: 0.9rem;
+  background: var(--degrade);
+  box-shadow: var(--lueur-magenta);
+  transform: skewX(-24deg);
+  transform-origin: left;
+}
 
+.section { padding-block: clamp(2rem, 6vw, 4rem); }
+
+/* --- Réticule en filigrane ------------------------------------------- */
 .en-tete-page::before,
 .accroche::before {
   content: '';
@@ -138,38 +200,29 @@ a:hover { color: #ffc95e; }
   z-index: -1;
   pointer-events: none;
   background: url('../assets/reticule.svg') center / contain no-repeat;
-  opacity: 0.55;
-}
-.en-tete-page::before {
-  width: clamp(14rem, 34vw, 26rem);
   aspect-ratio: 1;
-  right: max(-6rem, -8vw);
   top: 50%;
   translate: 0 -50%;
-  opacity: 0.4;
 }
-.accroche::before {
-  width: clamp(22rem, 52vw, 44rem);
-  aspect-ratio: 1;
-  right: max(-8rem, -10vw);
-  top: 50%;
-  translate: 0 -50%;
+.en-tete-page::before { width: clamp(14rem, 32vw, 24rem); right: max(-6rem, -8vw); opacity: 0.35; }
+.accroche { position: relative; }
+.accroche::before { width: clamp(22rem, 50vw, 42rem); right: max(-8rem, -10vw); opacity: 0.5; }
+@media (max-width: 52rem) {
+  .accroche::before { top: auto; bottom: -4rem; translate: 0 0; opacity: 0.3; }
 }
 
-/* Balayage unique au chargement : une ligne ambre descend le long de l'écran */
+/* Balayage unique au chargement */
 body > main::before {
   content: '';
   position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
+  left: 0; right: 0; top: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgb(255 178 36 / 0.55) 30%, rgb(255 178 36 / 0.55) 70%, transparent);
-  box-shadow: 0 0 18px 2px rgb(255 178 36 / 0.25);
+  background: var(--degrade);
+  box-shadow: 0 0 18px 3px rgb(255 46 151 / 0.35);
   pointer-events: none;
   z-index: 4;
   opacity: 0;
-  animation: balayage 1.6s cubic-bezier(.45, 0, .2, 1) 0.15s 1 both;
+  animation: balayage 1.4s cubic-bezier(.45, 0, .2, 1) 0.1s 1 both;
 }
 @keyframes balayage {
   0% { transform: translateY(0); opacity: 0; }
@@ -178,43 +231,59 @@ body > main::before {
   100% { transform: translateY(100vh); opacity: 0; }
 }
 
-@media (max-width: 52rem) {
-  .accroche::before { top: auto; bottom: -4rem; translate: 0 0; opacity: 0.35; }
-}
-
-/* Boutons */
+/* --- Boutons : forme inclinée, lueur néon ------------------------------ */
 .bouton {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5em;
-  font: 600 var(--t-m)/1 var(--corps);
-  padding: 0.8em 1.2em;
-  border-radius: var(--rayon);
-  border: 1px solid transparent;
+  font: 700 var(--t-m)/1 var(--titre);
+  letter-spacing: 0.01em;
+  padding: 0.85em 1.5em;
+  border: 0;
+  background: none;
+  color: var(--texte);
   cursor: pointer;
   text-decoration: none;
 }
-.bouton-principal { background: var(--ambre); color: #1a1405; }
-.bouton-principal:hover { background: #ffc95e; color: #1a1405; }
-.bouton-secondaire { background: transparent; color: var(--texte); border-color: var(--trait); }
-.bouton-secondaire:hover { border-color: var(--gris); color: var(--texte); }
-.bouton:disabled { opacity: 0.5; cursor: not-allowed; }
+.bouton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: skewX(-14deg);
+  border-radius: 2px;
+  transition: box-shadow 0.15s, filter 0.15s;
+}
+.bouton-principal { color: #fff; }
+.bouton-principal::before { background: linear-gradient(100deg, var(--magenta), var(--violet)); box-shadow: 0 0 0 rgb(0 0 0 / 0); }
+.bouton-principal:hover { color: #fff; }
+.bouton-principal:hover::before { box-shadow: var(--lueur-magenta); filter: brightness(1.1); }
+.bouton-secondaire::before { background: rgb(21 13 54 / 0.7); box-shadow: inset 0 0 0 1.5px var(--cyan); }
+.bouton-secondaire:hover { color: var(--texte); }
+.bouton-secondaire:hover::before { box-shadow: inset 0 0 0 1.5px var(--cyan), var(--lueur-cyan); }
+.bouton:disabled { opacity: 0.45; cursor: not-allowed; }
+.bouton:disabled::before { box-shadow: inset 0 0 0 1.5px var(--trait); }
+.bouton:focus-visible { outline-offset: 5px; }
 
-/* Formulaires */
+/* --- Formulaires -------------------------------------------------------- */
 label { display: block; font-weight: 500; margin-bottom: 0.3em; }
 .aide { display: block; color: var(--gris); font-size: var(--t-s); font-weight: 400; }
 input, select {
   width: 100%;
   font: inherit;
   color: var(--texte);
-  background: var(--nuit);
+  background: rgb(11 6 32 / 0.85);
   border: 1px solid var(--trait);
   border-radius: var(--rayon);
   padding: 0.6em 0.75em;
 }
-input:focus, select:focus { border-color: var(--ambre); outline: none; }
+input:focus, select:focus { border-color: var(--cyan); outline: none; box-shadow: 0 0 0 1px var(--cyan), 0 0 14px rgb(25 227 255 / 0.3); }
+input[type='checkbox'] { width: auto; accent-color: var(--magenta); }
 
-/* Chiffres façon HUD */
+/* --- Chiffres façon HUD -------------------------------------------------- */
 .chiffre {
   font-family: var(--titre);
   font-weight: 700;
@@ -222,17 +291,22 @@ input:focus, select:focus { border-color: var(--ambre); outline: none; }
   line-height: 1;
 }
 
+/* --- Panneaux : angles coupés + liseré dégradé --------------------------- */
 .panneau {
-  background: color-mix(in srgb, var(--plaque) 88%, transparent);
-  backdrop-filter: blur(3px);
-  border: 1px solid var(--trait);
-  border-radius: var(--rayon);
+  position: relative;
+  isolation: isolate;
+  clip-path: var(--biseau);
+  background: linear-gradient(140deg, rgb(255 46 151 / 0.7), rgb(51 38 107 / 0.9) 35%, rgb(51 38 107 / 0.9) 65%, rgb(25 227 255 / 0.7));
   padding: clamp(1rem, 3vw, 1.5rem);
 }
-
-.en-tete-page { padding-block: clamp(2rem, 6vw, 3.5rem) 1.5rem; }
-
-.section { padding-block: clamp(2rem, 6vw, 4rem); }
+.panneau::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  clip-path: var(--biseau);
+  background: linear-gradient(180deg, rgb(30 20 71 / 0.97), rgb(18 11 46 / 0.97));
+}
 
 table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: 0.6em 0.75em; border-bottom: 1px solid var(--trait); }
@@ -242,6 +316,9 @@ th { color: var(--gris); font-weight: 500; font-size: var(--t-s); }
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
+
+/* Défilement horizontal des tableaux sur mobile */
+.defile { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

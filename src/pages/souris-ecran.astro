@@ -1,0 +1,306 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Souris et écran" description="Mesure le taux d'interrogation réel de ta souris, teste la netteté des mouvements de ton écran et cherche les pixels morts.">
+  <div class="conteneur en-tete-page">
+    <h1>Souris et écran</h1>
+    <p class="chapo">Trois tests rapides pour vérifier que ton matériel donne ce qu'il promet.</p>
+  </div>
+
+  <div class="conteneur blocs">
+    <section aria-labelledby="t-polling">
+      <h2 id="t-polling">Taux d'interrogation de la souris</h2>
+      <p class="intro">
+        Bouge la souris en grands cercles rapides dans la zone pendant quelques secondes.
+        Le résultat indique combien de fois par seconde ta souris envoie sa position.
+      </p>
+      <div class="polling">
+        <div class="zone-souris" id="zone-souris" tabindex="0" aria-describedby="t-polling">
+          <span id="consigne-souris">Bouge ta souris ici</span>
+        </div>
+        <div class="mesures panneau">
+          <div>
+            <span class="libelle">Estimation</span>
+            <span class="chiffre grand" id="estimation">--</span>
+          </div>
+          <dl>
+            <div><dt>En ce moment</dt><dd class="chiffre" id="actuel">--</dd></div>
+            <div><dt>Pic mesuré</dt><dd class="chiffre" id="pic">--</dd></div>
+          </dl>
+          <button class="bouton bouton-secondaire" type="button" id="raz">Recommencer</button>
+          <p class="note" id="note-api"></p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-mouvement">
+      <h2 id="t-mouvement">Netteté en mouvement</h2>
+      <p class="intro">
+        Regarde la cible qui défile en la suivant des yeux. Une traînée floue ou des contours doublés
+        indiquent un écran lent ou un mode d'overdrive mal réglé. Plus l'écran monte en fréquence, plus l'image reste nette.
+      </p>
+      <div class="piste-conteneur panneau">
+        <canvas id="piste" height="150" aria-label="Cible qui défile horizontalement"></canvas>
+        <div class="commandes-piste">
+          <div class="vitesses" role="radiogroup" aria-label="Vitesse">
+            <button type="button" role="radio" aria-checked="false" data-vitesse="480">Lente</button>
+            <button type="button" role="radio" aria-checked="true" data-vitesse="960">Moyenne</button>
+            <button type="button" role="radio" aria-checked="false" data-vitesse="1920">Rapide</button>
+          </div>
+          <span class="libelle"><span class="chiffre" id="ips-piste">--</span> images/s</span>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-pixels">
+      <h2 id="t-pixels">Pixels morts</h2>
+      <p class="intro">
+        L'écran passe en plein écran sur des couleurs unies. Cherche les points qui ne changent pas de couleur.
+        Clique ou appuie sur une flèche pour changer de couleur, Échap pour quitter.
+      </p>
+      <button class="bouton bouton-principal" type="button" id="pixels">Lancer le test des pixels</button>
+    </section>
+  </div>
+
+  <div class="ecran-couleur" id="ecran-couleur" hidden tabindex="-1">
+    <p id="ecran-aide">Clique pour la couleur suivante · Échap pour quitter</p>
+  </div>
+</Base>
+
+<style>
+  .blocs { display: grid; gap: clamp(2.5rem, 6vw, 4rem); padding-bottom: 2rem; }
+  h2 { font-style: italic; }
+  .intro { color: var(--gris); }
+  .polling { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.5rem; align-items: stretch; }
+  .zone-souris {
+    min-height: 18rem;
+    display: grid; place-items: center;
+    clip-path: var(--biseau);
+    background:
+      radial-gradient(circle at 50% 50%, rgb(25 227 255 / 0.12), transparent 60%),
+      repeating-radial-gradient(circle at 50% 50%, rgb(139 92 255 / 0.18) 0 1px, transparent 1px 36px),
+      #0d0726;
+    color: var(--gris);
+    font-family: var(--titre);
+    font-size: var(--t-l);
+    cursor: crosshair;
+    user-select: none;
+    touch-action: none;
+  }
+  .zone-souris[data-actif] { color: var(--cyan); }
+  .mesures { display: grid; gap: 1rem; align-content: start; }
+  .libelle { color: var(--gris); font-size: var(--t-s); }
+  .grand { display: block; font-size: var(--t-4xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
+  dl { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  dt { color: var(--gris); font-size: var(--t-xs); }
+  dd { margin: 0; font-size: var(--t-xl); }
+  .note { color: var(--gris); font-size: var(--t-s); margin: 0; }
+  .mesures .bouton { justify-self: start; }
+
+  .piste-conteneur { display: grid; gap: 1rem; }
+  canvas { width: 100%; height: 150px; display: block; background: #08041a; }
+  .commandes-piste { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .vitesses { display: flex; gap: 0.5rem; }
+  .vitesses button {
+    font: 600 var(--t-s)/1 var(--titre);
+    color: var(--gris); background: var(--plaque);
+    border: 1px solid var(--trait); border-radius: var(--rayon);
+    padding: 0.55rem 0.9rem; cursor: pointer;
+  }
+  .vitesses button[aria-checked='true'] { color: var(--texte); border-color: var(--magenta); box-shadow: 0 0 12px rgb(255 46 151 / 0.3); }
+  #ips-piste { font-size: var(--t-l); color: var(--texte); }
+
+  .ecran-couleur {
+    position: fixed; inset: 0; z-index: 100;
+    background: #000; cursor: pointer;
+    display: grid; place-items: end center;
+  }
+  .ecran-couleur[hidden] { display: none; }
+  .ecran-couleur p {
+    margin: 0 0 1.5rem; padding: 0.4rem 0.8rem;
+    background: rgb(0 0 0 / 0.55); color: #fff; font-size: var(--t-s);
+    border-radius: var(--rayon);
+    transition: opacity 0.4s;
+  }
+  .ecran-couleur[data-discret] p { opacity: 0; }
+
+  @media (max-width: 52rem) { .polling { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  // ---------------------------------------------------------------------
+  // 1. Taux d'interrogation
+  // ---------------------------------------------------------------------
+  const STANDARDS = [125, 250, 500, 1000, 2000, 4000, 8000];
+  const FENETRE = 250; // ms
+  const zone = document.getElementById('zone-souris')!;
+  const consigne = document.getElementById('consigne-souris')!;
+  const eEstimation = document.getElementById('estimation')!;
+  const eActuel = document.getElementById('actuel')!;
+  const ePic = document.getElementById('pic')!;
+  const noteApi = document.getElementById('note-api')!;
+
+  const brut = 'onpointerrawupdate' in window;
+  noteApi.textContent = brut
+    ? 'Mesure fine disponible dans ce navigateur.'
+    : 'Ce navigateur limite la mesure : au-delà de 1000 Hz, le résultat peut être sous-estimé. Chrome ou Edge donnent la mesure la plus précise.';
+
+  let temps: number[] = [];
+  let pic = 0;
+  let fenetres: number[] = [];
+
+  function noter(t: number) {
+    temps.push(t);
+  }
+
+  if (brut) {
+    zone.addEventListener('pointerrawupdate' as 'pointermove', (e: PointerEvent) => { if (e.pointerType === 'mouse') noter(e.timeStamp); });
+  } else {
+    zone.addEventListener('pointermove', (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return;
+      const groupe = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
+      if (groupe.length) groupe.forEach((g) => noter(g.timeStamp));
+      else noter(e.timeStamp);
+    });
+  }
+  zone.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse') consigne.textContent = 'Ce test nécessite une souris.';
+  });
+
+  const plusProche = (v: number) => STANDARDS.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
+
+  setInterval(() => {
+    const maintenant = performance.now();
+    temps = temps.filter((t) => maintenant - t < 2000);
+    const recents = temps.filter((t) => maintenant - t < FENETRE);
+    const taux = recents.length * (1000 / FENETRE);
+    const bouge = recents.length > 10;
+    zone.toggleAttribute('data-actif', bouge);
+    if (!bouge) {
+      eActuel.textContent = '--';
+      return;
+    }
+    consigne.textContent = 'Continue…';
+    eActuel.textContent = `${Math.round(taux)} Hz`;
+    fenetres.push(taux);
+    if (fenetres.length > 200) fenetres.shift();
+    if (taux > pic) { pic = taux; ePic.textContent = `${Math.round(pic)} Hz`; }
+    if (fenetres.length >= 8) {
+      // 90e centile des fenêtres de mesure, ramené à la valeur standard la plus proche
+      const tri = [...fenetres].sort((a, b) => a - b);
+      const p90 = tri[Math.floor(tri.length * 0.9)];
+      // Valeur standard seulement si la mesure en est proche (± 25 %), sinon la valeur mesurée
+      const standard = plusProche(p90);
+      eEstimation.textContent = Math.abs(standard - p90) / standard <= 0.25 ? `≈ ${standard} Hz` : `≈ ${Math.round(p90 / 10) * 10} Hz`;
+      consigne.textContent = fenetres.length > 25 ? 'Mesure stable, tu peux arrêter' : 'Continue…';
+    }
+  }, 100);
+
+  document.getElementById('raz')!.addEventListener('click', () => {
+    temps = []; fenetres = []; pic = 0;
+    eEstimation.textContent = '--'; ePic.textContent = '--'; eActuel.textContent = '--';
+    consigne.textContent = 'Bouge ta souris ici';
+  });
+
+  // ---------------------------------------------------------------------
+  // 2. Netteté en mouvement
+  // ---------------------------------------------------------------------
+  const piste = document.getElementById('piste') as HTMLCanvasElement;
+  const ctx = piste.getContext('2d')!;
+  const eIps = document.getElementById('ips-piste')!;
+  let vitesse = 960;
+  let x = 0;
+  let precedent = 0;
+  let images: number[] = [];
+  let visible = false;
+
+  function dimensionner() {
+    const dpr = window.devicePixelRatio || 1;
+    piste.width = Math.round(piste.clientWidth * dpr);
+    piste.height = Math.round(piste.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function dessinerCible(px: number, h: number) {
+    const l = 96, hc = 64, y = (h - hc) / 2;
+    ctx.fillStyle = '#ff2e97';
+    ctx.fillRect(px, y, l, hc);
+    ctx.fillStyle = '#08041a';
+    for (let i = 0; i < 4; i++) ctx.fillRect(px + 12 + i * 20, y + 12, 8, hc - 24);
+    ctx.fillStyle = '#19e3ff';
+    ctx.fillRect(px + l - 18, y + hc / 2 - 6, 12, 12);
+  }
+
+  function boucle(t: number) {
+    if (!visible) { precedent = 0; return; }
+    const l = piste.clientWidth, h = piste.clientHeight;
+    const dt = precedent ? Math.min(t - precedent, 100) : 0;
+    precedent = t;
+    if (dt) { images.push(dt); if (images.length > 60) images.shift(); }
+    x = (x + (vitesse * dt) / 1000) % (l + 96);
+    ctx.clearRect(0, 0, l, h);
+    // repères verticaux fixes
+    ctx.fillStyle = 'rgba(139, 92, 255, 0.25)';
+    for (let gx = 0; gx < l; gx += 48) ctx.fillRect(gx, 0, 1, h);
+    dessinerCible(Math.round(x - 96), h);
+    if (images.length > 10 && images.length % 10 === 0) {
+      const moy = images.reduce((a, b) => a + b, 0) / images.length;
+      eIps.textContent = String(Math.round(1000 / moy));
+    }
+    requestAnimationFrame(boucle);
+  }
+
+  new IntersectionObserver((entrees) => {
+    const avant = visible;
+    visible = entrees[0].isIntersecting;
+    if (visible && !avant) { dimensionner(); requestAnimationFrame(boucle); }
+  }).observe(piste);
+  window.addEventListener('resize', dimensionner);
+
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-vitesse]')) {
+    b.addEventListener('click', () => {
+      vitesse = Number(b.dataset.vitesse);
+      for (const o of document.querySelectorAll('[data-vitesse]')) o.setAttribute('aria-checked', String(o === b));
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // 3. Pixels morts
+  // ---------------------------------------------------------------------
+  const COULEURS = ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#808080'];
+  const ecran = document.getElementById('ecran-couleur')!;
+  const btnPixels = document.getElementById('pixels') as HTMLButtonElement;
+  let indice = 0;
+  let minuterieAide = 0;
+
+  function couleur(i: number) {
+    indice = (i + COULEURS.length) % COULEURS.length;
+    ecran.style.background = COULEURS[indice];
+    ecran.removeAttribute('data-discret');
+    clearTimeout(minuterieAide);
+    minuterieAide = window.setTimeout(() => ecran.setAttribute('data-discret', ''), 1500);
+  }
+
+  async function ouvrir() {
+    ecran.hidden = false;
+    couleur(0);
+    ecran.focus();
+    try { await ecran.requestFullscreen?.(); } catch { /* le plein écran reste optionnel */ }
+  }
+  function quitter() {
+    ecran.hidden = true;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    btnPixels.focus();
+  }
+
+  btnPixels.addEventListener('click', ouvrir);
+  ecran.addEventListener('click', () => couleur(indice + 1));
+  ecran.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') quitter();
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); couleur(indice + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); couleur(indice - 1); }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && !ecran.hidden) quitter();
+  });
+</script>

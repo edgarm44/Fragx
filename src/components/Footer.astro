@@ -17,7 +17,9 @@ const annee = new Date().getFullYear();
 
 <style>
   .pied {
-    border-top: 1px solid var(--trait);
+    border-top: 1px solid transparent;
+    border-image: var(--degrade) 1;
+    background: rgb(8 4 26 / 0.85);
     color: var(--gris);
     font-size: var(--t-s);
     padding-block: 2rem;

@@ -1,33 +1,55 @@
 ---
 import { lien, sansBase } from '../lib/lien';
-const liens = [
-  { href: '/setup', label: 'Setup' },
-  { href: '/benchmark', label: 'Benchmark' },
-  { href: '/sensibilite', label: 'Sensibilité' },
-  { href: '/visee', label: 'Visée' },
-  { href: '/guides', label: 'Guides' },
-];
+import { CATEGORIES } from '../data/navigation';
+
 const chemin = sansBase(Astro.url.pathname).replace(/\/$/, '') || '/';
 const estActif = (href: string) => chemin === href || chemin.startsWith(href + '/');
 ---
 <header class="entete">
   <div class="conteneur barre">
     <a class="marque" href={lien('/')} aria-label="Fragx, accueil">
-      <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
-        <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none">
+      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+        <defs>
+          <linearGradient id="marque-degrade" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ff2e97" /><stop offset="1" stop-color="#19e3ff" />
+          </linearGradient>
+        </defs>
+        <g stroke="url(#marque-degrade)" stroke-width="2.6" stroke-linecap="round" fill="none">
           <path d="M16 3v8M16 21v8M3 16h8M21 16h8" />
         </g>
-        <circle cx="16" cy="16" r="2" fill="currentColor" />
+        <circle cx="16" cy="16" r="2" fill="#19e3ff" />
       </svg>
       <span>Fragx</span>
     </a>
-    <nav aria-label="Navigation principale">
-      <ul>
-        {liens.map((l) => (
-          <li>
-            <a href={lien(l.href)} aria-current={estActif(l.href) ? 'page' : undefined}>{l.label}</a>
-          </li>
-        ))}
+
+    <button class="burger" type="button" aria-expanded="false" aria-controls="menu-principal">
+      <span class="visuellement-cache">Menu</span>
+      <span class="trait" aria-hidden="true"></span>
+    </button>
+
+    <nav id="menu-principal" class="menu" aria-label="Navigation principale">
+      <ul class="menu-cats">
+        {CATEGORIES.map((c) => {
+          const active = c.outils.some((o) => estActif(o.href));
+          return (
+            <li class="menu-cat" data-active={active ? '' : undefined}>
+              <button type="button" class="titre-categorie" aria-expanded="false" aria-controls={`sous-${c.id}`}>
+                {c.nom}
+                <svg class="chevron" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" /></svg>
+              </button>
+              <ul class="sous-menu" id={`sous-${c.id}`}>
+                {c.outils.map((o) => (
+                  <li>
+                    <a href={lien(o.href)} aria-current={estActif(o.href) ? 'page' : undefined}>
+                      <span class="nom">{o.court}</span>
+                      <span class="desc">{o.texte}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   </div>
@@ -35,47 +57,127 @@ const estActif = (href: string) => chemin === href || chemin.startsWith(href + '
 
 <style>
   .entete {
-    border-bottom: 1px solid var(--trait);
-    background: color-mix(in srgb, var(--nuit) 92%, transparent);
     position: sticky;
     top: 0;
-    z-index: 5;
-    backdrop-filter: blur(6px);
+    z-index: 20;
+    background: rgb(11 6 32 / 0.82);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid transparent;
+    border-image: var(--degrade) 1;
   }
-  .barre {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    min-height: 3.75rem;
-    flex-wrap: wrap;
-  }
+  .barre { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 4rem; }
   .marque {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--ambre);
-    text-decoration: none;
-    font-family: var(--titre);
-    font-weight: 700;
-    font-size: var(--t-xl);
+    display: inline-flex; align-items: center; gap: 0.55rem;
+    color: var(--texte); text-decoration: none;
+    font-family: var(--titre); font-weight: 700; font-style: italic; font-size: var(--t-xl);
+    letter-spacing: 0.02em;
   }
-  .marque span { color: var(--texte); }
-  ul {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-    margin: 0;
-    padding: 0.5rem 0;
-  }
-  nav a {
+  .marque:hover { color: var(--texte); }
+  .marque:hover svg { filter: drop-shadow(0 0 6px rgb(25 227 255 / 0.8)); }
+
+  .menu-cats { list-style: none; display: flex; gap: 0.25rem; margin: 0; padding: 0; }
+  .menu-cat { position: relative; }
+  .titre-categorie {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font: 600 var(--t-m)/1 var(--titre);
     color: var(--gris);
-    text-decoration: none;
-    font-weight: 500;
-    padding-block: 0.3rem;
-    border-bottom: 2px solid transparent;
+    background: none; border: 0; cursor: pointer;
+    padding: 0.75rem 0.9rem;
+    border-radius: var(--rayon);
   }
-  nav a:hover { color: var(--texte); }
-  nav a[aria-current='page'] { color: var(--texte); border-bottom-color: var(--ambre); }
+  .titre-categorie:hover, .titre-categorie[aria-expanded='true'] { color: var(--texte); background: rgb(139 92 255 / 0.12); }
+  .menu-cat[data-active] .titre-categorie { color: var(--texte); }
+  .menu-cat[data-active] .titre-categorie::after {
+    content: ''; position: absolute; left: 0.9rem; right: 0.9rem; bottom: 0.2rem; height: 2px;
+    background: var(--degrade); box-shadow: var(--lueur-magenta);
+  }
+  .chevron { transition: transform 0.15s; }
+  .titre-categorie[aria-expanded='true'] .chevron { transform: rotate(180deg); }
+
+  .sous-menu {
+    list-style: none; margin: 0; padding: 0.5rem;
+    position: absolute; top: calc(100% + 0.5rem); right: 0;
+    width: min(22rem, 90vw);
+    background: rgb(18 11 46 / 0.98);
+    border: 1px solid var(--trait);
+    border-top: 2px solid var(--magenta);
+    box-shadow: 0 18px 40px rgb(0 0 0 / 0.5), 0 0 30px rgb(139 92 255 / 0.18);
+    display: none;
+  }
+  .titre-categorie[aria-expanded='true'] + .sous-menu { display: block; }
+  .sous-menu a {
+    display: grid; gap: 0.15rem;
+    padding: 0.65rem 0.75rem; border-radius: var(--rayon);
+    text-decoration: none; color: var(--texte);
+    border-left: 2px solid transparent;
+  }
+  .sous-menu a:hover { background: rgb(139 92 255 / 0.14); border-left-color: var(--cyan); }
+  .sous-menu a[aria-current='page'] { border-left-color: var(--magenta); background: rgb(255 46 151 / 0.1); }
+  .sous-menu .nom { font-family: var(--titre); font-weight: 600; }
+  .sous-menu .desc { font-size: var(--t-xs); color: var(--gris); line-height: 1.4; }
+
+  .burger { display: none; }
+
+  @media (max-width: 52rem) {
+    .burger {
+      display: inline-grid; place-items: center;
+      width: 2.75rem; height: 2.75rem;
+      background: none; border: 1px solid var(--trait); border-radius: var(--rayon); cursor: pointer;
+    }
+    .burger .trait, .burger .trait::before, .burger .trait::after {
+      display: block; width: 1.2rem; height: 2px; background: var(--texte); position: relative; content: '';
+      transition: transform 0.15s, background 0.15s;
+    }
+    .burger .trait::before { position: absolute; top: -6px; }
+    .burger .trait::after { position: absolute; top: 6px; }
+    .burger[aria-expanded='true'] .trait { background: transparent; }
+    .burger[aria-expanded='true'] .trait::before { transform: translateY(6px) rotate(45deg); }
+    .burger[aria-expanded='true'] .trait::after { transform: translateY(-6px) rotate(-45deg); }
+
+    .menu {
+      display: none;
+      position: absolute; left: 0; right: 0; top: 100%;
+      max-height: calc(100vh - 4rem); overflow-y: auto;
+      background: rgb(11 6 32 / 0.98);
+      border-bottom: 1px solid var(--trait);
+      padding: 0.5rem var(--gouttiere) 1.25rem;
+    }
+    .menu[data-ouvert] { display: block; }
+    .menu-cats { flex-direction: column; gap: 0.75rem; }
+    .titre-categorie { pointer-events: none; padding: 0.5rem 0 0.25rem; color: var(--magenta); font-size: var(--t-s); }
+    .titre-categorie .chevron, .menu-cat[data-active] .titre-categorie::after { display: none; }
+    .sous-menu { display: block; position: static; width: auto; padding: 0; background: none; border: 0; box-shadow: none; }
+    .sous-menu .desc { display: none; }
+  }
 </style>
+
+<script>
+  const boutons = document.querySelectorAll<HTMLButtonElement>('.titre-categorie');
+  const fermer = (sauf?: HTMLButtonElement) => boutons.forEach((b) => { if (b !== sauf) b.setAttribute('aria-expanded', 'false'); });
+
+  boutons.forEach((b) => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const ouvert = b.getAttribute('aria-expanded') === 'true';
+      fermer(b);
+      b.setAttribute('aria-expanded', String(!ouvert));
+    });
+  });
+  document.addEventListener('click', (e) => {
+    if (!(e.target as Element).closest('.menu-cat')) fermer();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const ouvert = [...boutons].find((b) => b.getAttribute('aria-expanded') === 'true');
+    fermer();
+    ouvert?.focus();
+  });
+
+  const burger = document.querySelector<HTMLButtonElement>('.burger');
+  const menu = document.getElementById('menu-principal');
+  burger?.addEventListener('click', () => {
+    const ouvert = burger.getAttribute('aria-expanded') === 'true';
+    burger.setAttribute('aria-expanded', String(!ouvert));
+    menu?.toggleAttribute('data-ouvert', !ouvert);
+  });
+</script>

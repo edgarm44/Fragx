@@ -23,7 +23,7 @@ import { lien } from '../lib/lien';
 <style>
   .compteur { margin: 0; display: grid; gap: 1rem; }
   .lignes { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: end; }
-  .grand { font-size: clamp(3.5rem, 9vw, 5.5rem); color: var(--ambre); display: block; }
+  .grand { font-size: clamp(3.5rem, 9vw, 5.5rem); color: var(--cyan); text-shadow: var(--lueur-cyan); display: block; }
   .unite { color: var(--gris); font-size: var(--t-s); }
   dl { margin: 0; display: grid; gap: 0.5rem; text-align: right; }
   dt { color: var(--gris); font-size: var(--t-xs); }
@@ -52,7 +52,7 @@ import { lien } from '../lib/lien';
     const ctx = canvas.getContext('2d');
     const mouvementReduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const style = getComputedStyle(document.documentElement);
-    const ambre = style.getPropertyValue('--ambre').trim() || '#ffb224';
+    const ambre = style.getPropertyValue('--accent').trim() || '#19e3ff';
     const trait = style.getPropertyValue('--trait').trim() || '#333866';
 
     const historique: number[] = [];
