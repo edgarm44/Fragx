@@ -42,11 +42,17 @@ if errorlevel 1 (
 git push -q -u origin main
 if errorlevel 1 goto :echec
 
-rem 5. Attendre que GitHub ait reconstruit le site, puis l'ouvrir
-echo [3/3] Mise en ligne (1 a 2 minutes)...
+rem 5. GitHub reconstruit le site (environ 1 minute) : on attend en arriere-plan,
+rem    le site s'ouvrira tout seul dans le navigateur quand il sera en ligne.
+rem    (nouvelle fenetre cachee : elle continue apres la fermeture de celle-ci)
 for /f %%c in ('git rev-parse HEAD') do set "COMMIT=%%c"
-powershell -NoProfile -ExecutionPolicy Bypass -File "outils\attendre-publication.ps1" -Commit %COMMIT%
-goto :fin
+start "" /min powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "outils\attendre-publication.ps1" -Commit %COMMIT% -Discret
+echo [3/3] Envoye. Le site s'ouvrira tout seul dans environ 1 minute, des qu'il sera en ligne.
+echo.
+echo Cette fenetre se ferme dans 5 secondes.
+timeout /t 5 >nul
+endlocal
+exit /b 0
 
 :echec
 echo.
