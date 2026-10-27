@@ -21,6 +21,7 @@ import { BADGES } from '../lib/badges';
       <div class="jauge-bloc">
         <div class="jauge" role="progressbar" aria-labelledby="t-niveau" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="jauge"><span id="jauge-rempli"></span></div>
         <p class="libelle" id="xp-texte">--</p>
+        <button class="bouton bouton-secondaire bouton-partager" type="button" id="partager" hidden>Partager mon niveau</button>
       </div>
       <dl>
         <div><dt>Exercices terminés</dt><dd class="chiffre" id="s-total">0</dd></div>
@@ -86,6 +87,7 @@ import { BADGES } from '../lib/badges';
 
 <script>
   import { BADGES, contexte, debloques, experience, niveau } from '../lib/badges';
+  import { ouvrirPartage } from '../lib/partage';
 
   const c = contexte();
   const ok = debloques(c);
@@ -110,5 +112,13 @@ import { BADGES } from '../lib/badges';
     li.querySelector<HTMLElement>('.mini-jauge span')!.style.width = `${Math.min(100, (v / o) * 100)}%`;
     li.querySelector('.etat')!.textContent = fait ? 'Débloqué' : (o > 1 ? `${Math.min(v, o)} / ${o}` : 'À débloquer');
   }
+  const btnPartager = document.getElementById('partager') as HTMLButtonElement;
+  btnPartager.hidden = c.total === 0;
+  btnPartager.addEventListener('click', () => void ouvrirPartage({
+    titre: 'Mon niveau',
+    valeur: `Niveau ${n.niveau}`,
+    detail: `${ok.size} badge${ok.size > 1 ? 's' : ''} sur ${BADGES.length}, ${c.total} exercice${c.total > 1 ? 's' : ''} terminé${c.total > 1 ? 's' : ''}`,
+    fichier: 'fragx-niveau',
+  }));
   try { localStorage.setItem('fragx.badges.vus', JSON.stringify([...ok])); } catch { /* indisponible */ }
 </script>

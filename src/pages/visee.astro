@@ -78,6 +78,7 @@ import { JEUX } from '../data/jeux';
         <p id="consigne"></p>
         <button class="bouton bouton-principal" id="demarrer" type="button">Commencer</button>
         <p class="record" id="record"></p>
+        <button class="bouton bouton-secondaire" type="button" id="partager" hidden>Partager ce résultat</button>
         <p class="indication" id="indication"></p>
       </div>
     </div>
@@ -147,6 +148,7 @@ import { JEUX } from '../data/jeux';
   import { sonTir, sonTouche, preparerSon, sonActif, reglerSon } from '../lib/son';
   import { verifierBadges } from '../lib/badges';
   import { JEUX } from '../data/jeux';
+  import { ouvrirPartage, type Resultat } from '../lib/partage';
 
   // ---------------------------------------------------------------------
   // Réglages
@@ -272,6 +274,8 @@ import { JEUX } from '../data/jeux';
   let prochainChangement = 0;
   let alea: () => number = Math.random;
   let dernierResultat = '';
+  let aPartager: Resultat | null = null;
+  const btnPartager = document.getElementById('partager') as HTMLButtonElement;
 
   const params = new URLSearchParams(location.search);
   const defi = params.get('defi') ? defiDu(jour()) : null;
@@ -492,6 +496,7 @@ import { JEUX } from '../data/jeux';
     cible = null;
     if (document.pointerLockElement === canvas) document.exitPointerLock();
     if (!defi) document.getElementById('modes')!.removeAttribute('data-verrou');
+    aPartager = null;
     if (annule) {
       dernierResultat = 'Exercice arrêté';
     } else {
@@ -510,8 +515,16 @@ import { JEUX } from '../data/jeux';
         const meilleur = enregistrerDefi(defi.date, ex.id, score);
         dernierResultat += meilleur ? ', meilleur score du défi aujourd\'hui' : '';
       }
+      const jeu = JEUX.find((j) => j.id === reglages.jeu)!;
+      aPartager = {
+        titre: defi && defi.exercice.id === ex.id ? `Défi du jour : ${ex.nom}` : `Visée : ${ex.nom}`,
+        valeur: ex.format(score),
+        detail: (ex.type === 'suivi' ? 'Temps passé sur la cible' : `Précision ${precision()}`) + `, sensibilité ${jeu.nom}`,
+        fichier: `fragx-${ex.id}`,
+      };
       verifierBadges();
     }
+    btnPartager.hidden = !aPartager;
     btnDemarrer.textContent = 'Recommencer';
     majAccueil();
     accueil.hidden = false;
@@ -575,6 +588,7 @@ import { JEUX } from '../data/jeux';
   document.addEventListener('visibilitychange', () => { if (document.hidden && actif) terminer(true); });
   window.addEventListener('resize', () => { dimensionner(); if (!actif) dessiner(); });
   btnDemarrer.addEventListener('click', demarrer);
+  btnPartager.addEventListener('click', () => { if (aPartager) void ouvrirPartage(aPartager); });
 
   function choisir(m: string) {
     const e = exercice(m);
@@ -583,6 +597,8 @@ import { JEUX } from '../data/jeux';
     ex = e;
     for (const b of document.querySelectorAll('[data-mode]')) b.setAttribute('aria-checked', String(b.getAttribute('data-mode') === m));
     dernierResultat = '';
+    aPartager = null;
+    btnPartager.hidden = true;
     btnDemarrer.textContent = 'Commencer';
     majAccueil();
   }

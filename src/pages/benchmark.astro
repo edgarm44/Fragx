@@ -29,6 +29,7 @@ import Base from '../layouts/Base.astro';
         <span class="libelle">Score</span>
         <span class="chiffre valeur" id="score">0</span>
         <p id="record" class="libelle"></p>
+        <button class="bouton bouton-secondaire bouton-partager" type="button" id="partager" hidden>Partager mon score</button>
       </div>
       <table>
         <caption class="visuellement-cache">Détail par palier</caption>
@@ -88,6 +89,7 @@ import Base from '../layouts/Base.astro';
 <script>
   import { marquer } from '../lib/historique';
   import { verifierBadges } from '../lib/badges';
+  import { ouvrirPartage, type Resultat } from '../lib/partage';
 
   const CLE_RECORD = 'fragx.benchmark.record';
   const DUREE_PALIER = 4000;      // ms mesurées par palier
@@ -227,6 +229,9 @@ import Base from '../layouts/Base.astro';
   interface Palier { cubes: number; moyenne: number; bas1: number; }
   let enCours = false;
   let annule = false;
+  let interrompu = false;
+  /** Termine immédiatement le palier en cours (arrêt ou onglet caché), même si le navigateur a suspendu l'affichage. */
+  let arreterPalier: (() => void) | null = null;
 
   function stats(deltas: number[]): { moyenne: number; bas1: number } {
     const moy = deltas.reduce((a, b) => a + b, 0) / deltas.length;
@@ -238,12 +243,13 @@ import Base from '../layouts/Base.astro';
 
   function executerPalier(cubes: number, index: number): Promise<Palier | null> {
     return new Promise((resolve) => {
+      arreterPalier = () => resolve(null);
       const deltas: number[] = [];
       let debut = 0;
       let prec = 0;
       hudEtat.textContent = `Palier ${index + 1} · ${cubes.toLocaleString('fr-FR')} cubes`;
       const image = (t: number) => {
-        if (annule || document.hidden) { resolve(null); return; }
+        if (annule || interrompu) { resolve(null); return; }
         if (!debut) debut = t;
         dessiner(t, cubes);
         if (prec && t - debut > CHAUFFE) deltas.push(t - prec);
@@ -262,8 +268,12 @@ import Base from '../layouts/Base.astro';
 
   async function lancer() {
     if (enCours || !gl) return;
+    if (document.hidden) {
+      afficherErreur('La page n\'est pas visible à l\'écran : le navigateur suspend l\'affichage. Mets la fenêtre au premier plan puis relance le test.');
+      return;
+    }
     try { preparer(); } catch (e) { afficherErreur('Le test n\'a pas pu démarrer sur ce navigateur.'); return; }
-    enCours = true; annule = false;
+    enCours = true; annule = false; interrompu = false;
     btnLancer.disabled = true; btnArreter.disabled = false;
     erreur.hidden = true;
     const resultats: Palier[] = [];
@@ -279,7 +289,8 @@ import Base from '../layouts/Base.astro';
     btnLancer.disabled = false; btnArreter.disabled = true;
     hudEtat.textContent = annule ? 'Arrêté' : 'Terminé';
 
-    if (document.hidden && !annule) afficherErreur('Le test s\'est interrompu parce que l\'onglet est passé en arrière-plan. Relance-le en gardant l\'onglet visible.');
+    arreterPalier = null;
+    if (interrompu && !annule) afficherErreur('Le test s\'est interrompu parce que l\'onglet est passé en arrière-plan. Relance-le en gardant l\'onglet visible.');
     if (!resultats.length) {
       if (annule) afficherErreur('Test arrêté avant la fin du premier palier (environ 5 secondes) : aucun score à afficher. Relance-le et laisse-le tourner jusqu\'au bout.');
       return;
@@ -308,9 +319,28 @@ import Base from '../layouts/Base.astro';
     }
     if (annule) ligneRecord.textContent = 'Test arrêté avant la fin : score partiel, non enregistré.';
     document.getElementById('resultat')!.hidden = false;
-    if (!annule) { marquer('benchmark'); verifierBadges(); }
+    const btnPartager = document.getElementById('partager') as HTMLButtonElement;
+    btnPartager.hidden = annule;
+    if (!annule) {
+      partage = { titre: 'Benchmark navigateur', valeur: `${format(score)} points`, detail: carteGraphique() || `${resultats.length} paliers`, fichier: 'fragx-benchmark' };
+      marquer('benchmark');
+      verifierBadges();
+    }
   }
 
   btnLancer.addEventListener('click', lancer);
-  btnArreter.addEventListener('click', () => { annule = true; });
+  let partage: Resultat | null = null;
+  function carteGraphique(): string {
+    try {
+      const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+      const brut = String(ext ? gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '');
+      const m = brut.match(/^ANGLE \([^,]+,\s*(.+?)(?:\s*\(0x[0-9a-f]+\))?\s*(?:Direct3D|OpenGL|Vulkan|Metal|,)/i);
+      return (m ? m[1] : brut).replace(/^(NVIDIA|AMD|Intel\(R\))\s+/i, '').trim();
+    } catch { return ''; }
+  }
+  document.getElementById('partager')!.addEventListener('click', () => { if (partage) void ouvrirPartage(partage); });
+  btnArreter.addEventListener('click', () => { annule = true; arreterPalier?.(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && enCours) { interrompu = true; arreterPalier?.(); }
+  });
 </script>

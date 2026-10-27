@@ -54,6 +54,8 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+/* Un élément masqué reste masqué, même si une classe lui donne un affichage (boutons, grilles…) */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -350,3 +352,28 @@ th { color: var(--gris); font-weight: 500; font-size: var(--t-s); }
 .toast span { font-size: var(--t-s); opacity: 0.92; }
 .toast[data-sortie] { opacity: 0; transform: translateY(8px); transition: opacity 0.35s, transform 0.35s; }
 @keyframes toast-entree { from { opacity: 0; transform: translateY(12px); } }
+
+/* --- Fenêtre de partage ------------------------------------------------ */
+dialog.partage {
+  width: min(44rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  color: var(--texte);
+  background: linear-gradient(180deg, #1c1245, #110a2e);
+  border: 1px solid var(--trait);
+  border-top: 2px solid var(--magenta);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.6), 0 0 40px rgb(139 92 255 / 0.25);
+}
+dialog.partage::backdrop { background: rgb(5 2 15 / 0.75); backdrop-filter: blur(3px); }
+dialog.partage h2 { font-size: var(--t-xl); font-style: italic; margin: 0 2rem 1rem 0; }
+.partage-apercu { display: block; width: 100%; height: auto; aspect-ratio: 1200 / 630; background: #0b0620; border: 1px solid var(--trait); }
+.partage-actions { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; margin-top: 1.25rem; }
+.partage-statut { min-height: 1.4em; margin: 0.75rem 0 0; font-size: var(--t-s); color: var(--ok); }
+.partage-statut[data-erreur] { color: var(--alerte); }
+.partage-fermer {
+  position: absolute; top: 0.75rem; right: 0.75rem;
+  width: 2.25rem; height: 2.25rem;
+  font-size: 1.5rem; line-height: 1;
+  color: var(--gris); background: none; border: 1px solid var(--trait); border-radius: var(--rayon); cursor: pointer;
+}
+.partage-fermer:hover { color: var(--texte); border-color: var(--violet); }
+.bouton-partager { margin-top: 0.25rem; }

@@ -28,6 +28,7 @@ import Base from '../layouts/Base.astro';
         <div><dt>Meilleur essai</dt><dd class="chiffre" id="meilleur">--</dd></div>
         <div><dt>Record sur cet appareil</dt><dd class="chiffre" id="record">--</dd></div>
       </dl>
+      <button class="bouton bouton-secondaire bouton-partager" type="button" id="partager">Partager mon résultat</button>
     </section>
 
     <aside class="explication">
@@ -107,6 +108,8 @@ import Base from '../layouts/Base.astro';
 <script>
   import { ajouter, lireHistorique } from '../lib/historique';
   import { verifierBadges } from '../lib/badges';
+  import { ouvrirPartage, type Resultat } from '../lib/partage';
+  let aPartager: Resultat | null = null;
 
   const NB_ESSAIS = 5;
   const zone = document.getElementById('zone') as HTMLButtonElement;
@@ -167,6 +170,7 @@ import Base from '../layouts/Base.astro';
     document.getElementById('meilleur')!.textContent = ms(meilleur);
     document.getElementById('record')!.textContent = ms(record);
     resultat.hidden = false;
+    aPartager = { titre: 'Test de réflexes', valeur: ms(moyenne), detail: `${niveau(moyenne)}, meilleur essai ${ms(meilleur)}`, fichier: 'fragx-reflexes' };
     verifierBadges();
     afficher('fin', ms(moyenne), `${niveau(moyenne)}. Clique pour une nouvelle série.`);
   }
@@ -202,6 +206,8 @@ import Base from '../layouts/Base.astro';
         break;
     }
   }
+
+  document.getElementById('partager')!.addEventListener('click', () => { if (aPartager) void ouvrirPartage(aPartager); });
 
   // pointerdown : plus rapide que click (déclenché à l'appui, pas au relâchement)
   zone.addEventListener('pointerdown', (e) => { if (e.button === 0) { e.preventDefault(); action(); } });
