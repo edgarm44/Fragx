@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { CATEGORIES } from '../data/navigation';
+import { MATERIEL } from '../data/materiel';
 import { lien } from '../lib/lien';
 
 /** Plan du site pour les moteurs de recherche. */
@@ -10,6 +11,7 @@ export const GET: APIRoute = async ({ site }) => {
     '/',
     ...CATEGORIES.flatMap((c) => c.outils.map((o) => o.href)),
     ...guides.map((g) => `/guides/${g.id}`),
+    ...MATERIEL.map((c) => `/materiel/${c.id}`),
     '/mentions-legales',
     '/transparence',
   ];

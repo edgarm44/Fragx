@@ -101,6 +101,7 @@ import { JEUX_COUVERTS } from '../data/jeux';
       <p class="note" hidden>
         L'évaluation de la carte graphique et du processeur par modèle arrive avec la base de données matériel.
         En attendant, compare ton score sur le <a href={lien('/benchmark')}>benchmark</a>.
+        Pour changer de matériel, consulte la sélection <a href={lien('/materiel')}>meilleur matériel</a>.
       </p>
     </section>
   </div>
@@ -137,6 +138,8 @@ import { JEUX_COUVERTS } from '../data/jeux';
   .liste :global(strong) { display: block; font-weight: 600; }
   .liste :global(.niveau) { font-size: var(--t-xs); color: var(--gris); }
   .liste :global(p) { margin: 0.3rem 0 0; color: var(--gris); }
+  .liste :global(.liens) { margin-top: 0.5rem; font-size: var(--t-s); }
+  .liste :global(.liens a) { color: var(--cyan); }
 
   @media (max-width: 56rem) {
     .disposition { grid-template-columns: 1fr; }
@@ -150,9 +153,10 @@ import { JEUX_COUVERTS } from '../data/jeux';
 <script>
   import { marquer } from '../lib/historique';
   import { verifierBadges } from '../lib/badges';
+  import { lien } from '../lib/lien';
 
   type Niveau = 'priorite' | 'ameliorer' | 'ok' | 'info';
-  interface Constat { niveau: Niveau; titre: string; detail: string; }
+  interface Constat { niveau: Niveau; titre: string; detail: string; liens?: { href: string; texte: string }[] }
 
   const CLE = 'fragx.setup';
   const form = document.getElementById('formulaire') as HTMLFormElement;
@@ -237,15 +241,15 @@ import { JEUX_COUVERTS } from '../data/jeux';
     if (/swiftshader|llvmpipe|basic render/.test(gpu)) {
       c.push({ niveau: 'priorite', titre: 'Accélération matérielle désactivée dans le navigateur', detail: 'Ton navigateur dessine sans carte graphique, ce qui fausse le benchmark. Active l\'accélération matérielle dans ses paramètres puis redémarre-le.' });
     } else if (/intel\(r\) (uhd|hd|iris)|intel (uhd|hd|iris)|amd radeon\(tm\) graphics|radeon graphics$/.test(gpu)) {
-      c.push({ niveau: 'ameliorer', titre: 'Le navigateur utilise le GPU intégré', detail: 'Si ton PC a une carte graphique dédiée, vérifie dans Paramètres Windows > Affichage > Graphiques que tes jeux utilisent bien le mode « Hautes performances », et que l\'écran est branché sur la carte graphique et non sur la carte mère.' });
+      c.push({ niveau: 'ameliorer', titre: 'Le navigateur utilise le GPU intégré', detail: 'Si ton PC a une carte graphique dédiée, vérifie dans Paramètres Windows > Affichage > Graphiques que tes jeux utilisent bien le mode « Hautes performances », et que l\'écran est branché sur la carte graphique et non sur la carte mère.', liens: [{ href: '/guides/windows-et-pilotes', texte: 'Guide Windows et pilotes' }] });
     }
 
-    if (hz <= 60) c.push({ niveau: 'priorite', titre: 'Écran 60 Hz', detail: 'Passer à un écran 144 Hz ou plus est l\'amélioration la plus visible pour un jeu de tir : image plus fluide et cibles plus faciles à suivre.' });
-    else if (hz < 144) c.push({ niveau: 'ameliorer', titre: `Écran ${hz} Hz`, detail: 'Correct, mais 144 Hz ou plus reste la référence pour les FPS compétitifs.' });
+    if (hz <= 60) c.push({ niveau: 'priorite', titre: 'Écran 60 Hz', detail: 'Passer à un écran 144 Hz ou plus est l\'amélioration la plus visible pour un jeu de tir : image plus fluide et cibles plus faciles à suivre.', liens: [{ href: '/materiel/ecran', texte: 'Choisir un écran gaming' }] });
+    else if (hz < 144) c.push({ niveau: 'ameliorer', titre: `Écran ${hz} Hz`, detail: 'Correct, mais 144 Hz ou plus reste la référence pour les FPS compétitifs.', liens: [{ href: '/materiel/ecran', texte: 'Choisir un écran gaming' }] });
     else c.push({ niveau: 'ok', titre: `Écran ${hz} Hz`, detail: 'Fréquence adaptée aux jeux de tir. Vise des FPS en jeu au moins égaux à cette fréquence.' });
 
     if (hzMesure && hz > 60 && hzMesure < hz * 0.8) {
-      c.push({ niveau: 'priorite', titre: `Ton écran semble tourner à ${Math.round(hzMesure)} Hz au lieu de ${hz} Hz`, detail: 'Vérifie Paramètres Windows > Affichage > Affichage avancé > Fréquence d\'actualisation, et utilise un câble DisplayPort ou HDMI compatible. Fais aussi la mesure navigateur en plein écran, sans autre programme lourd ouvert.' });
+      c.push({ niveau: 'priorite', titre: `Ton écran semble tourner à ${Math.round(hzMesure)} Hz au lieu de ${hz} Hz`, detail: 'Vérifie Paramètres Windows > Affichage > Affichage avancé > Fréquence d\'actualisation, et utilise un câble DisplayPort ou HDMI compatible. Fais aussi la mesure navigateur en plein écran, sans autre programme lourd ouvert.', liens: [{ href: '/ecran', texte: 'Mesurer la fréquence réelle' }] });
     }
 
     if (ram <= 8) c.push({ niveau: 'priorite', titre: '8 Go de mémoire vive', detail: 'Insuffisant pour les jeux récents : saccades et chargements longs. 16 Go en double canal (deux barrettes) est le minimum conseillé, 32 Go est confortable.' });
@@ -255,14 +259,14 @@ import { JEUX_COUVERTS } from '../data/jeux';
     if (d.stockage === 'hdd') c.push({ niveau: 'priorite', titre: 'Jeux installés sur disque dur', detail: 'Les jeux récents chargent beaucoup plus vite sur SSD, et certains (textures, apparition dans les battle royale) saccadent sur disque dur. Un SSD NVMe de 1 To est un achat rentable.' });
     else c.push({ niveau: 'ok', titre: d.stockage === 'nvme' ? 'SSD NVMe' : 'SSD SATA', detail: 'Stockage adapté.' });
 
-    if (polling && polling < 500) c.push({ niveau: 'ameliorer', titre: `Souris à ${polling} Hz`, detail: 'Monte le taux d\'interrogation à 1000 Hz dans le logiciel de ta souris : le mouvement sera plus régulier.' });
+    if (polling && polling < 500) c.push({ niveau: 'ameliorer', titre: `Souris à ${polling} Hz`, detail: 'Monte le taux d\'interrogation à 1000 Hz dans le logiciel de ta souris : le mouvement sera plus régulier.', liens: [{ href: '/souris-ecran', texte: 'Tester ta souris' }, { href: '/materiel/souris', texte: 'Choisir une souris gaming' }] });
     else if (polling >= 1000) c.push({ niveau: 'ok', titre: `Souris à ${polling} Hz`, detail: polling > 1000 ? 'Très élevé : si tu observes des micro-saccades, redescends à 1000 Hz, certains processeurs supportent mal les taux élevés.' : 'Réglage standard pour le jeu.' });
-    else if (polling === 0) c.push({ niveau: 'info', titre: 'Taux d\'interrogation inconnu', detail: 'Il se règle dans le logiciel du fabricant de la souris. 1000 Hz est la valeur conseillée.' });
+    else if (polling === 0) c.push({ niveau: 'info', titre: 'Taux d\'interrogation inconnu', detail: 'Il se règle dans le logiciel du fabricant de la souris. 1000 Hz est la valeur conseillée.', liens: [{ href: '/souris-ecran', texte: 'Le mesurer avec le test de souris' }] });
 
-    if (dpi > 3200) c.push({ niveau: 'info', titre: `${dpi} DPI`, detail: 'Pas de problème en soi, mais la sensibilité en jeu sera très basse. La plupart des joueurs compétitifs jouent entre 400 et 1600 DPI. Calcule ton eDPI sur le convertisseur de sensibilité.' });
+    if (dpi > 3200) c.push({ niveau: 'info', titre: `${dpi} DPI`, detail: 'Pas de problème en soi, mais la sensibilité en jeu sera très basse. La plupart des joueurs compétitifs jouent entre 400 et 1600 DPI. Calcule ton eDPI sur le convertisseur de sensibilité.', liens: [{ href: '/sensibilite', texte: 'Convertisseur de sensibilité' }] });
 
-    if (d.connexion === 'wifi') c.push({ niveau: 'ameliorer', titre: 'Connexion Wi-Fi', detail: 'Le Wi-Fi ajoute de la latence et surtout des variations (gigue). Un câble Ethernet reste la meilleure solution pour jouer en ligne.' });
-    else if (d.connexion === 'cpl') c.push({ niveau: 'ameliorer', titre: 'Boîtier CPL', detail: 'Souvent plus stable que le Wi-Fi mais sensible aux perturbations électriques. Un câble Ethernet direct reste préférable.' });
+    if (d.connexion === 'wifi') c.push({ niveau: 'ameliorer', titre: 'Connexion Wi-Fi', detail: 'Le Wi-Fi ajoute de la latence et surtout des variations (gigue). Un câble Ethernet reste la meilleure solution pour jouer en ligne.', liens: [{ href: '/ping', texte: 'Tester ta connexion' }] });
+    else if (d.connexion === 'cpl') c.push({ niveau: 'ameliorer', titre: 'Boîtier CPL', detail: 'Souvent plus stable que le Wi-Fi mais sensible aux perturbations électriques. Un câble Ethernet direct reste préférable.', liens: [{ href: '/ping', texte: 'Tester ta connexion' }] });
     else c.push({ niveau: 'ok', titre: 'Connexion par câble', detail: 'La meilleure option pour jouer en ligne.' });
 
     const ordre: Record<Niveau, number> = { priorite: 0, ameliorer: 1, info: 2, ok: 3 };
@@ -290,6 +294,18 @@ import { JEUX_COUVERTS } from '../data/jeux';
       const detail = document.createElement('p');
       detail.textContent = c.detail;
       li.append(niveau, titre, detail);
+      if (c.liens?.length) {
+        const p = document.createElement('p');
+        p.className = 'liens';
+        c.liens.forEach((l, i) => {
+          if (i > 0) p.append(' · ');
+          const a = document.createElement('a');
+          a.href = lien(l.href);
+          a.textContent = `${l.texte} →`;
+          p.append(a);
+        });
+        li.append(p);
+      }
       return li;
     }));
     liste.hidden = false;

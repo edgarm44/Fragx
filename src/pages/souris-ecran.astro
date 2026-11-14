@@ -86,12 +86,16 @@ import { lien } from '../lib/lien';
       </p>
     </section>
 
-
+    <p class="suite">
+      Ta souris montre ses limites ? Consulte la sélection des <a href={lien('/materiel/souris')}>meilleures souris pour les jeux de tir</a>,
+      ou fais le <a href={lien('/setup')}>diagnostic complet du setup</a>.
+    </p>
   </div>
 
 </Base>
 
 <style>
+  .suite { color: var(--gris); margin-top: 2rem; }
   .blocs { display: grid; gap: clamp(2.5rem, 6vw, 4rem); padding-bottom: 2rem; }
   h2 { font-style: italic; }
   .intro { color: var(--gris); }

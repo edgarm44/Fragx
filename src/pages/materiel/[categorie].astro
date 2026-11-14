@@ -1,0 +1,75 @@
+---
+import Base from '../../layouts/Base.astro';
+import CarteProduit from '../../components/CarteProduit.astro';
+import { lien } from '../../lib/lien';
+import { MATERIEL, GAMMES, type CategorieMateriel, type Gamme } from '../../data/materiel';
+
+export function getStaticPaths() {
+  return MATERIEL.map((c) => ({ params: { categorie: c.id }, props: { cat: c } }));
+}
+interface Props { cat: CategorieMateriel }
+const { cat } = Astro.props;
+const ordre: Gamme[] = ['budget', 'milieu', 'haut'];
+const groupes = ordre.map((g) => ({ g, produits: cat.produits.filter((p) => p.gamme === g) })).filter((x) => x.produits.length > 0);
+const autres = MATERIEL.filter((c) => c.id !== cat.id);
+const date = new Date(cat.miseAJour).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<Base title={cat.titre} description={cat.description}>
+  <article class="conteneur page">
+    <p class="fil"><a href={lien('/materiel')}>Meilleur matériel</a> / {cat.nom}</p>
+    <h1>{cat.titre}</h1>
+    <p class="chapo">{cat.intro}</p>
+
+    <aside class="outil panneau">
+      <p>{cat.outil.texte}</p>
+      <a class="bouton" href={lien(cat.outil.href)}>{cat.outil.nom}</a>
+    </aside>
+
+    <section aria-labelledby="t-criteres">
+      <h2 id="t-criteres">Ce qui compte pour un jeu de tir</h2>
+      <dl class="criteres">
+        {cat.criteres.map((c) => <div><dt>{c.titre}</dt><dd>{c.texte}</dd></div>)}
+      </dl>
+    </section>
+
+    <section aria-labelledby="t-selection">
+      <h2 id="t-selection">La sélection</h2>
+      <p class="avert">
+        Produits non testés par Fragx : sélection basée sur les tests cités sous chaque fiche. Prix et disponibilité en France à vérifier au moment de l'achat. Mise à jour le {date}.
+      </p>
+      {groupes.map(({ g, produits }) => (
+        <div class="groupe">
+          <h3 class="titre-gamme">{GAMMES[g]}</h3>
+          <div class="grille-produits">
+            {produits.map((p) => <CarteProduit produit={p} />)}
+          </div>
+        </div>
+      ))}
+    </section>
+
+    <nav class="autres" aria-label="Autres catégories">
+      <h2>Voir aussi</h2>
+      <ul>
+        {autres.map((c) => <li><a href={lien(`/materiel/${c.id}`)}>{c.titre}</a></li>)}
+        <li><a href={lien('/pros')}>Le matériel des joueurs pros</a></li>
+      </ul>
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .page { padding-block: clamp(2rem, 6vw, 3.5rem); }
+  .fil { font-size: var(--t-s); color: var(--gris); margin: 0 0 0.5rem; }
+  .chapo { max-width: 68ch; }
+  h2 { font-size: var(--t-xl); font-style: italic; margin-top: 2.5rem; }
+  .outil { display: flex; align-items: center; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; margin: 1.5rem 0; }
+  .outil p { margin: 0; max-width: 60ch; color: #d6d5e6; }
+  .criteres { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem 2rem; margin: 0; }
+  .criteres dt { font: 600 var(--t-m)/1.3 var(--titre); color: var(--cyan); margin-bottom: 0.3rem; }
+  .criteres dd { margin: 0; color: #d6d5e6; }
+  .avert { font-size: var(--t-s); color: var(--gris); max-width: 75ch; }
+  .groupe { margin-top: 1.5rem; }
+  .titre-gamme { font: 700 var(--t-m)/1.2 var(--titre); text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); margin: 0 0 0.75rem; }
+  .grille-produits { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 1rem; }
+  .autres ul { padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+</style>

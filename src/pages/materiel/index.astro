@@ -1,0 +1,48 @@
+---
+import Base from '../../layouts/Base.astro';
+import { lien } from '../../lib/lien';
+import { MATERIEL } from '../../data/materiel';
+---
+<Base title="Meilleur matériel pour les jeux de tir" description="Souris, écran, clavier : les critères qui comptent pour les FPS et une sélection par budget, basée sur des tests publiés et sourcés.">
+  <article class="conteneur page">
+    <h1>Meilleur matériel pour les jeux de tir</h1>
+    <p class="chapo">
+      Avant d'acheter, teste ce que tu as déjà : un réglage suffit souvent. Si tu veux vraiment changer, voici ce qui compte pour un FPS et une sélection par budget.
+    </p>
+
+    <div class="grille-cat">
+      {MATERIEL.map((c) => (
+        <a class="carte-cat panneau" href={lien(`/materiel/${c.id}`)}>
+          <h2>{c.nom}</h2>
+          <p>{c.intro}</p>
+          <span class="nb">{c.produits.length} modèles sélectionnés</span>
+        </a>
+      ))}
+    </div>
+
+    <section class="methode" aria-labelledby="t-methode">
+      <h2 id="t-methode">Comment cette sélection est faite</h2>
+      <p>
+        Fragx n'a pas testé ces produits lui-même. Chaque modèle est retenu d'après des tests publiés par des sites spécialisés (RTINGS, PC Gamer, Tom's Hardware, prosettings.net), cités sous chaque fiche avec leur date.
+        Aucun prix n'est affiché : il change trop souvent, compare-le au moment d'acheter.
+      </p>
+      <p>
+        Ces pages ne contiennent aucun lien affilié pour l'instant. Si des liens de ce type sont ajoutés, chacun sera signalé : voir la page <a href={lien('/transparence')}>Transparence</a>.
+      </p>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .page { padding-block: clamp(2rem, 6vw, 3.5rem); }
+  .chapo { max-width: 68ch; }
+  .grille-cat { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; margin: 2rem 0; }
+  .carte-cat { display: grid; gap: 0.6rem; grid-template-rows: auto 1fr auto; text-decoration: none; color: inherit; transition: transform 0.15s, box-shadow 0.15s; }
+  .carte-cat:hover, .carte-cat:focus-visible { transform: translateY(-2px); box-shadow: var(--lueur-cyan); }
+  .carte-cat h2 { margin: 0; font-size: var(--t-xl); font-style: italic; }
+  .carte-cat p { margin: 0; color: #d6d5e6; }
+  .nb { font: 600 var(--t-s)/1.2 var(--titre); color: var(--cyan); }
+  .methode { max-width: 68ch; }
+  .methode h2 { font-size: var(--t-xl); font-style: italic; }
+  .methode p { color: #d6d5e6; }
+</style>

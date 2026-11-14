@@ -1,0 +1,68 @@
+---
+import { GAMMES, type Produit } from '../data/materiel';
+import { MONETISE } from '../data/editeur';
+
+interface Props { produit: Produit; avecGamme?: boolean }
+const { produit: p, avecGamme = false } = Astro.props;
+
+// Garde-fou : aucun lien affilié tant que les mentions légales ne sont pas prêtes
+if (p.lien?.affilie && !MONETISE) {
+  throw new Error(`Lien affilié pour « ${p.nom} » alors que MONETISE vaut false : mets à jour src/data/editeur.ts et les mentions légales d'abord.`);
+}
+---
+<article class="produit" data-gamme={p.gamme}>
+  <header>
+    {avecGamme && <span class="gamme">{GAMMES[p.gamme]}</span>}
+    <h3>{p.nom}</h3>
+    <p class="pour-qui">{p.pourQui}</p>
+  </header>
+  <ul class="caracs" aria-label="Caractéristiques">
+    {p.caracteristiques.map((c) => <li>{c}</li>)}
+  </ul>
+  <div class="colonnes">
+    <div>
+      <h4>Points forts</h4>
+      <ul>{p.pointsForts.map((x) => <li>{x}</li>)}</ul>
+    </div>
+    {p.aSavoir && p.aSavoir.length > 0 && (
+      <div>
+        <h4>À savoir</h4>
+        <ul>{p.aSavoir.map((x) => <li>{x}</li>)}</ul>
+      </div>
+    )}
+  </div>
+  <footer>
+    <p class="sources">Source{p.sources.length > 1 ? 's' : ''} : {p.sources.map((s, i) => <>{i > 0 ? ', ' : ''}<a href={s.url} rel="noopener" target="_blank">{s.nom}</a> ({s.date})</>)}</p>
+    {p.lien && (
+      <p class="achat">
+        <a class="bouton bouton-secondaire" href={p.lien.url} rel={p.lien.affilie ? 'sponsored noopener' : 'noopener'} target="_blank">Voir chez {p.lien.boutique}</a>
+        {p.lien.affilie && <span class="badge-affilie">Lien affilié</span>}
+      </p>
+    )}
+  </footer>
+</article>
+
+<style>
+  .produit {
+    display: grid; gap: 0.9rem; align-content: start;
+    padding: 1.25rem;
+    background: linear-gradient(180deg, rgb(30 20 71 / 0.9), rgb(18 11 46 / 0.9));
+    border: 1px solid var(--trait);
+    border-left: 3px solid var(--violet);
+  }
+  .produit[data-gamme='budget'] { border-left-color: var(--ok); }
+  .produit[data-gamme='milieu'] { border-left-color: var(--cyan); }
+  .produit[data-gamme='haut'] { border-left-color: var(--magenta); }
+  header { display: grid; gap: 0.3rem; }
+  .gamme { font: 600 var(--t-xs)/1.2 var(--titre); color: var(--gris); text-transform: uppercase; letter-spacing: 0.06em; }
+  h3 { margin: 0; font-size: var(--t-l); font-style: italic; }
+  .pour-qui { margin: 0; color: #d6d5e6; }
+  .caracs { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .caracs li { font-size: var(--t-xs); padding: 0.25rem 0.55rem; background: rgb(11 6 32 / 0.8); border: 1px solid var(--trait); border-radius: var(--rayon); }
+  .colonnes { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem 1.5rem; }
+  h4 { font: 600 var(--t-s)/1.2 var(--titre); margin: 0 0 0.35rem; color: var(--gris); }
+  .colonnes ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; font-size: var(--t-s); color: #d6d5e6; }
+  footer { display: grid; gap: 0.6rem; }
+  .sources { margin: 0; font-size: var(--t-xs); color: var(--gris); }
+  .achat { margin: 0; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+</style>
