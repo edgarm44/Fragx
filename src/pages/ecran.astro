@@ -1,0 +1,438 @@
+---
+import Base from '../layouts/Base.astro';
+import { lien } from '../lib/lien';
+---
+<Base title="Test d'écran et de latence" description="Test d'écran en ligne : fréquence réelle (Hz), images sautées et régularité, délai entre le clic et l'image, netteté en mouvement et pixels morts.">
+  <div class="conteneur en-tete-page">
+    <h1>Test d'écran et de latence</h1>
+    <p class="chapo">
+      Vérifie que ton écran tourne vraiment à sa fréquence, qu'aucune image n'est sautée, et combien de temps ton PC
+      met à afficher un clic. Garde cette page au premier plan pendant les mesures.
+    </p>
+  </div>
+
+  <div class="conteneur blocs">
+    <section aria-labelledby="t-freq">
+      <h2 id="t-freq">Fréquence et images sautées</h2>
+      <p class="intro">
+        Pendant 10 secondes, le test note l'instant de chaque image affichée par ton navigateur. Ne touche à rien
+        pendant la mesure et ferme les vidéos ou les jeux ouverts.
+      </p>
+      <div class="freq">
+        <div class="panneau trace-bloc">
+          <canvas id="trace" height="160" aria-label="Temps entre deux images, en direct"></canvas>
+          <div class="commandes">
+            <div>
+              <label for="hz-annonce">Fréquence de ton écran <span class="aide">Celle du fabricant</span></label>
+              <select id="hz-annonce">
+                {[60, 75, 100, 120, 144, 165, 170, 180, 240, 280, 360, 480, 540].map((v) => <option value={v} selected={v === 144}>{v} Hz</option>)}
+              </select>
+            </div>
+            <button class="bouton bouton-principal" type="button" id="mesurer">Lancer la mesure</button>
+          </div>
+        </div>
+        <div class="mesures panneau" aria-live="polite">
+          <div>
+            <span class="libelle">Fréquence mesurée</span>
+            <span class="chiffre grand" id="f-hz">--</span>
+          </div>
+          <dl>
+            <div><dt>Images sautées</dt><dd class="chiffre" id="f-sautees">--</dd></div>
+            <div><dt>Irrégularité</dt><dd class="chiffre" id="f-gigue">--</dd></div>
+          </dl>
+          <p class="verdict" id="f-verdict"></p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-latence">
+      <h2 id="t-latence">Délai entre le clic et l'image</h2>
+      <p class="intro">
+        Clique 10 fois dans la zone, à ton rythme. Le test mesure le temps entre l'arrivée du clic dans le navigateur
+        et l'affichage de l'image qui y répond. Ce délai dépend de ton PC, du navigateur et de la fréquence de l'écran.
+      </p>
+      <div class="latence">
+        <div class="zone-latence" id="zone-latence" tabindex="0" role="button" aria-describedby="t-latence">
+          <span id="l-consigne">Clique ici</span>
+        </div>
+        <div class="mesures panneau" aria-live="polite">
+          <div>
+            <span class="libelle">Délai médian</span>
+            <span class="chiffre grand" id="l-mediane">--</span>
+          </div>
+          <dl>
+            <div><dt>Clics mesurés</dt><dd class="chiffre" id="l-nb">0/10</dd></div>
+            <div><dt>Une image dure</dt><dd class="chiffre" id="l-image">--</dd></div>
+          </dl>
+          <p class="verdict" id="l-verdict"></p>
+          <button class="bouton bouton-secondaire" type="button" id="l-raz">Recommencer</button>
+        </div>
+      </div>
+      <p class="note">
+        Ce n'est pas le retard total de ton écran : la souris et l'électronique de l'écran ajoutent leur propre délai,
+        qu'aucun navigateur ne peut mesurer (il faudrait un capteur posé sur l'écran).
+      </p>
+    </section>
+
+    <section aria-labelledby="t-mouvement">
+      <h2 id="t-mouvement">Netteté en mouvement</h2>
+      <p class="intro">
+        Regarde la cible qui défile en la suivant des yeux. Une traînée floue ou des contours doublés
+        indiquent un écran lent ou un mode d'overdrive mal réglé. Plus l'écran monte en fréquence, plus l'image reste nette.
+      </p>
+      <div class="piste-conteneur panneau">
+        <canvas id="piste" height="150" aria-label="Cible qui défile horizontalement"></canvas>
+        <div class="commandes-piste">
+          <div class="vitesses" role="radiogroup" aria-label="Vitesse">
+            <button type="button" role="radio" aria-checked="false" data-vitesse="480">Lente</button>
+            <button type="button" role="radio" aria-checked="true" data-vitesse="960">Moyenne</button>
+            <button type="button" role="radio" aria-checked="false" data-vitesse="1920">Rapide</button>
+          </div>
+          <span class="libelle"><span class="chiffre" id="ips-piste">--</span> images/s</span>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-pixels">
+      <h2 id="t-pixels">Pixels morts</h2>
+      <p class="intro">
+        L'écran passe en plein écran sur des couleurs unies. Cherche les points qui ne changent pas de couleur.
+        Clique ou appuie sur une flèche pour changer de couleur, Échap pour quitter.
+      </p>
+      <button class="bouton bouton-principal" type="button" id="pixels">Lancer le test des pixels</button>
+    </section>
+
+    <p class="suite">
+      Tu veux savoir si ta carte graphique suit la fréquence de ton écran ? Lance le <a href={lien('/benchmark')}>benchmark</a>,
+      ou le <a href={lien('/setup')}>diagnostic complet du setup</a>.
+    </p>
+  </div>
+
+  <div class="ecran-couleur" id="ecran-couleur" hidden tabindex="-1">
+    <p id="ecran-aide">Clique pour la couleur suivante · Échap pour quitter</p>
+  </div>
+</Base>
+
+<style>
+  .blocs { display: grid; gap: clamp(2.5rem, 6vw, 4rem); padding-bottom: 2rem; }
+  h2 { font-style: italic; }
+  .intro { color: var(--gris); }
+  .freq, .latence { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.5rem; align-items: stretch; }
+  .trace-bloc { display: grid; gap: 1rem; }
+  #trace { width: 100%; height: 160px; display: block; background: #08041a; }
+  .commandes { display: flex; justify-content: space-between; align-items: end; gap: 1rem; flex-wrap: wrap; }
+  .commandes > div { width: 12rem; }
+  .mesures { display: grid; gap: 1rem; align-content: start; }
+  .mesures .bouton { justify-self: start; }
+  .libelle { color: var(--gris); font-size: var(--t-s); }
+  .grand { display: block; font-size: var(--t-4xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
+  dl { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  dt { color: var(--gris); font-size: var(--t-xs); }
+  dd { margin: 0; font-size: var(--t-xl); }
+  .verdict { margin: 0; font-weight: 600; min-height: 1.5em; }
+  .verdict[data-n='ok'] { color: var(--ok); }
+  .verdict[data-n='moyen'] { color: #ffd15c; }
+  .verdict[data-n='alerte'] { color: var(--alerte); }
+  .note { color: var(--gris); font-size: var(--t-s); }
+  .suite { color: var(--gris); }
+  .zone-latence {
+    min-height: 16rem; display: grid; place-content: center;
+    clip-path: var(--biseau); background: #0d0726;
+    color: var(--gris); font-family: var(--titre); font-size: var(--t-l);
+    cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  }
+  .zone-latence[data-flash] { background: var(--cyan); color: #04121a; }
+  .zone-latence:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+  .piste-conteneur { display: grid; gap: 1rem; }
+  #piste { width: 100%; height: 150px; display: block; background: #08041a; }
+  .commandes-piste { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .vitesses { display: flex; gap: 0.5rem; }
+  .vitesses button {
+    font: 600 var(--t-s)/1 var(--titre);
+    color: var(--gris); background: var(--plaque);
+    border: 1px solid var(--trait); border-radius: var(--rayon);
+    padding: 0.55rem 0.9rem; cursor: pointer;
+  }
+  .vitesses button[aria-checked='true'] { color: var(--texte); border-color: var(--magenta); box-shadow: 0 0 12px rgb(255 46 151 / 0.3); }
+  #ips-piste { font-size: var(--t-l); color: var(--texte); }
+
+  .ecran-couleur {
+    position: fixed; inset: 0; z-index: 100;
+    background: #000; cursor: pointer;
+    display: grid; place-items: end center;
+  }
+  .ecran-couleur[hidden] { display: none; }
+  .ecran-couleur p {
+    margin: 0 0 1.5rem; padding: 0.4rem 0.8rem;
+    background: rgb(0 0 0 / 0.55); color: #fff; font-size: var(--t-s);
+    border-radius: var(--rayon);
+    transition: opacity 0.4s;
+  }
+  .ecran-couleur[data-discret] p { opacity: 0; }
+
+  @media (max-width: 52rem) { .freq, .latence { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  const virgule = (v: number, d = 1) => v.toFixed(d).replace('.', ',');
+  const mediane = (v: number[]) => { const t = [...v].sort((a, b) => a - b); return t.length ? t[Math.floor(t.length / 2)] : NaN; };
+  const COURANTES = [50, 60, 75, 90, 100, 120, 144, 165, 170, 175, 180, 200, 240, 280, 300, 360, 480, 500, 540];
+  const arrondir = (hz: number) => COURANTES.reduce((a, b) => (Math.abs(b - hz) < Math.abs(a - hz) ? b : a));
+
+  // ---------------------------------------------------------------------
+  // Fréquence et images sautées
+  // ---------------------------------------------------------------------
+  {
+    const DUREE = 10000;
+    const canvas = document.getElementById('trace') as HTMLCanvasElement;
+    const ctx = canvas.getContext('2d')!;
+    const btn = document.getElementById('mesurer') as HTMLButtonElement;
+    const annonce = document.getElementById('hz-annonce') as HTMLSelectElement;
+    const verdict = document.getElementById('f-verdict')!;
+    try { const v = JSON.parse(localStorage.getItem('fragx.setup') || '{}').hz; if (v) annonce.value = String(v); } catch { /* indisponible */ }
+
+    let deltas: number[] = [];
+    let enCours = false;
+    let debut = 0, prec = 0;
+
+    function dessiner() {
+      const dpr = window.devicePixelRatio || 1;
+      const L = canvas.clientWidth, H = canvas.clientHeight;
+      if (canvas.width !== Math.round(L * dpr)) { canvas.width = Math.round(L * dpr); canvas.height = Math.round(H * dpr); }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, L, H);
+      const periode = 1000 / Number(annonce.value);
+      const max = Math.max(periode * 3, 20);
+      const y = (v: number) => H - 6 - (Math.min(v, max) / max) * (H - 12);
+      ctx.strokeStyle = 'rgba(139,92,255,0.5)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, y(periode)); ctx.lineTo(L, y(periode)); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(170,163,210,0.8)'; ctx.font = '12px Barlow, sans-serif';
+      ctx.fillText(`${annonce.value} Hz attendus`, 6, y(periode) - 5);
+      const n = Math.min(deltas.length, Math.floor(L / 2));
+      const visibles = deltas.slice(-n);
+      const pas = L / Math.max(n, 1);
+      visibles.forEach((v, i) => {
+        ctx.fillStyle = v > periode * 1.5 ? '#ff4d6d' : '#19e3ff';
+        const h = H - 6 - y(v);
+        ctx.fillRect(i * pas, y(v), Math.max(1, pas - 0.5), Math.max(1.5, h));
+      });
+    }
+
+    function image(t: number) {
+      if (!enCours) return;
+      if (prec) deltas.push(t - prec);
+      prec = t;
+      dessiner();
+      const reste = Math.max(0, DUREE - (t - debut));
+      btn.textContent = `Mesure… ${Math.ceil(reste / 1000)} s`;
+      if (t - debut >= DUREE) { terminer(); return; }
+      requestAnimationFrame(image);
+    }
+
+    function terminer() {
+      enCours = false;
+      btn.disabled = false;
+      btn.textContent = 'Relancer la mesure';
+      if (deltas.length < 30) return;
+      const med = mediane(deltas);
+      const hz = 1000 / med;
+      const sautees = deltas.reduce((n, d) => n + Math.max(0, Math.round(d / med) - 1), 0);
+      const moy = deltas.reduce((a, b) => a + b, 0) / deltas.length;
+      const ecart = Math.sqrt(deltas.reduce((a, b) => a + (b - moy) ** 2, 0) / deltas.length);
+      const attendu = Number(annonce.value);
+      document.getElementById('f-hz')!.textContent = `${arrondir(hz)} Hz`;
+      document.getElementById('f-sautees')!.textContent = String(sautees);
+      document.getElementById('f-gigue')!.textContent = `± ${virgule(ecart)} ms`;
+      const pct = (sautees / (deltas.length + sautees)) * 100;
+      if (hz < attendu * 0.9) {
+        verdict.dataset.n = 'alerte';
+        verdict.textContent = `Ton écran semble tourner à ${arrondir(hz)} Hz au lieu de ${attendu} Hz. Vérifie la fréquence dans Paramètres Windows > Affichage > Affichage avancé, et le câble (DisplayPort ou HDMI récent).`;
+      } else if (pct > 1) {
+        verdict.dataset.n = 'moyen';
+        verdict.textContent = `${sautees} images sautées (${virgule(pct)} %). Ferme les programmes lourds, branche le portable sur secteur, et relance.`;
+      } else {
+        verdict.dataset.n = 'ok';
+        verdict.textContent = 'Fréquence conforme et affichage régulier.';
+      }
+    }
+
+    btn.addEventListener('click', () => {
+      if (document.hidden) return;
+      deltas = []; prec = 0; enCours = true; btn.disabled = true;
+      for (const id of ['f-hz', 'f-sautees', 'f-gigue']) document.getElementById(id)!.textContent = '--';
+      verdict.textContent = ''; delete verdict.dataset.n;
+      requestAnimationFrame((t) => { debut = t; prec = t; requestAnimationFrame(image); });
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && enCours) {
+        enCours = false; btn.disabled = false; btn.textContent = 'Relancer la mesure';
+        verdict.dataset.n = 'alerte';
+        verdict.textContent = 'Mesure interrompue : la page est passée en arrière-plan. Garde-la au premier plan et relance.';
+      }
+    });
+    annonce.addEventListener('change', dessiner);
+    window.addEventListener('resize', dessiner);
+    dessiner();
+  }
+
+  // ---------------------------------------------------------------------
+  // Délai entre le clic et l'image
+  // ---------------------------------------------------------------------
+  {
+    const NB = 10;
+    const zone = document.getElementById('zone-latence')!;
+    const consigne = document.getElementById('l-consigne')!;
+    const verdict = document.getElementById('l-verdict')!;
+    let mesures: number[] = [];
+    let periode = 0;
+    let attente = false;
+
+    // Durée d'une image, mesurée en continu tant que la page est visible
+    {
+      const d: number[] = []; let p = 0;
+      const boucle = (t: number) => {
+        if (p) { d.push(t - p); if (d.length > 60) d.shift(); periode = mediane(d); }
+        p = t; requestAnimationFrame(boucle);
+      };
+      requestAnimationFrame(boucle);
+      document.addEventListener('visibilitychange', () => { p = 0; });
+    }
+
+    function afficher() {
+      document.getElementById('l-nb')!.textContent = `${mesures.length}/${NB}`;
+      if (periode) document.getElementById('l-image')!.textContent = `${virgule(periode)} ms`;
+      if (!mesures.length) { document.getElementById('l-mediane')!.textContent = '--'; return; }
+      const med = mediane(mesures);
+      document.getElementById('l-mediane')!.textContent = `${virgule(med)} ms`;
+      if (mesures.length >= NB) {
+        consigne.textContent = 'Terminé';
+        const images = med / periode;
+        if (images <= 2.2) { verdict.dataset.n = 'ok'; verdict.textContent = `Très réactif : environ ${virgule(images)} image${images >= 2 ? 's' : ''} de délai.`; }
+        else if (images <= 3.5) { verdict.dataset.n = 'moyen'; verdict.textContent = `Correct : environ ${virgule(images)} images de délai. Une synchronisation verticale ou un PC chargé peut l'expliquer.`; }
+        else { verdict.dataset.n = 'alerte'; verdict.textContent = `Délai élevé : environ ${virgule(images)} images. Ferme les programmes lourds, désactive les économies d'énergie et réessaie.`; }
+      }
+    }
+
+    function clic(horodatage: number) {
+      if (attente || mesures.length >= NB) return;
+      attente = true;
+      zone.setAttribute('data-flash', '');
+      // L'image qui contient le changement commence à t ; elle est affichée à la synchronisation suivante (t + une image)
+      requestAnimationFrame((t) => {
+        const delai = Math.max(0, t - horodatage) + periode;
+        mesures.push(delai);
+        setTimeout(() => { zone.removeAttribute('data-flash'); attente = false; consigne.textContent = mesures.length < NB ? 'Clique encore' : 'Terminé'; afficher(); }, 150);
+      });
+    }
+    zone.addEventListener('mousedown', (e) => { if (e.button === 0) { e.preventDefault(); clic(e.timeStamp); } });
+    zone.addEventListener('touchstart', (e) => { e.preventDefault(); clic(e.timeStamp); }, { passive: false });
+    zone.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); clic(e.timeStamp); } });
+    document.getElementById('l-raz')!.addEventListener('click', () => {
+      mesures = []; verdict.textContent = ''; delete verdict.dataset.n; consigne.textContent = 'Clique ici'; afficher();
+    });
+    afficher();
+  }
+
+  // ---------------------------------------------------------------------
+  // 2. Netteté en mouvement
+  // ---------------------------------------------------------------------
+  const piste = document.getElementById('piste') as HTMLCanvasElement;
+  const ctx = piste.getContext('2d')!;
+  const eIps = document.getElementById('ips-piste')!;
+  let vitesse = 960;
+  let x = 0;
+  let precedent = 0;
+  let images: number[] = [];
+  let visible = false;
+
+  function dimensionner() {
+    const dpr = window.devicePixelRatio || 1;
+    piste.width = Math.round(piste.clientWidth * dpr);
+    piste.height = Math.round(piste.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function dessinerCible(px: number, h: number) {
+    const l = 96, hc = 64, y = (h - hc) / 2;
+    ctx.fillStyle = '#ff2e97';
+    ctx.fillRect(px, y, l, hc);
+    ctx.fillStyle = '#08041a';
+    for (let i = 0; i < 4; i++) ctx.fillRect(px + 12 + i * 20, y + 12, 8, hc - 24);
+    ctx.fillStyle = '#19e3ff';
+    ctx.fillRect(px + l - 18, y + hc / 2 - 6, 12, 12);
+  }
+
+  function boucle(t: number) {
+    if (!visible) { precedent = 0; return; }
+    const l = piste.clientWidth, h = piste.clientHeight;
+    const dt = precedent ? Math.min(t - precedent, 100) : 0;
+    precedent = t;
+    if (dt) { images.push(dt); if (images.length > 60) images.shift(); }
+    x = (x + (vitesse * dt) / 1000) % (l + 96);
+    ctx.clearRect(0, 0, l, h);
+    // repères verticaux fixes
+    ctx.fillStyle = 'rgba(139, 92, 255, 0.25)';
+    for (let gx = 0; gx < l; gx += 48) ctx.fillRect(gx, 0, 1, h);
+    dessinerCible(Math.round(x - 96), h);
+    if (images.length > 10 && images.length % 10 === 0) {
+      const moy = images.reduce((a, b) => a + b, 0) / images.length;
+      eIps.textContent = String(Math.round(1000 / moy));
+    }
+    requestAnimationFrame(boucle);
+  }
+
+  new IntersectionObserver((entrees) => {
+    const avant = visible;
+    visible = entrees[0].isIntersecting;
+    if (visible && !avant) { dimensionner(); requestAnimationFrame(boucle); }
+  }).observe(piste);
+  window.addEventListener('resize', dimensionner);
+
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-vitesse]')) {
+    b.addEventListener('click', () => {
+      vitesse = Number(b.dataset.vitesse);
+      for (const o of document.querySelectorAll('[data-vitesse]')) o.setAttribute('aria-checked', String(o === b));
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // 3. Pixels morts
+  // ---------------------------------------------------------------------
+  const COULEURS = ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#808080'];
+  const ecran = document.getElementById('ecran-couleur')!;
+  const btnPixels = document.getElementById('pixels') as HTMLButtonElement;
+  let indice = 0;
+  let minuterieAide = 0;
+
+  function couleur(i: number) {
+    indice = (i + COULEURS.length) % COULEURS.length;
+    ecran.style.background = COULEURS[indice];
+    ecran.removeAttribute('data-discret');
+    clearTimeout(minuterieAide);
+    minuterieAide = window.setTimeout(() => ecran.setAttribute('data-discret', ''), 1500);
+  }
+
+  async function ouvrir() {
+    ecran.hidden = false;
+    couleur(0);
+    ecran.focus();
+    try { await ecran.requestFullscreen?.(); } catch { /* le plein écran reste optionnel */ }
+  }
+  function quitter() {
+    ecran.hidden = true;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    btnPixels.focus();
+  }
+
+  btnPixels.addEventListener('click', ouvrir);
+  ecran.addEventListener('click', () => couleur(indice + 1));
+  ecran.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') quitter();
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); couleur(indice + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); couleur(indice - 1); }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && !ecran.hidden) quitter();
+  });
+</script>

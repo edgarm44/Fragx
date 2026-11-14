@@ -18,7 +18,8 @@ export const CATEGORIES: Categorie[] = [
     outils: [
       { href: '/setup', nom: 'Diagnostic du setup', court: 'Diagnostic', texte: 'Repère ce qui freine ton PC : écran, mémoire, stockage, souris, connexion.', duree: '3 min' },
       { href: '/benchmark', nom: 'Benchmark navigateur', court: 'Benchmark', texte: 'Charge ta carte graphique par paliers et obtiens un score à comparer.', duree: '1 min' },
-      { href: '/souris-ecran', nom: 'Souris et écran', court: 'Souris et écran', texte: 'Clics par seconde, double-clic parasite, taux d\'interrogation réel, netteté de l\'écran et pixels morts.', duree: '2 min' },
+      { href: '/souris-ecran', nom: 'Test de souris', court: 'Test de souris', texte: 'Clics par seconde, double-clic parasite et taux d\'interrogation réel de ta souris.', duree: '2 min' },
+      { href: '/ecran', nom: 'Test d\'écran et de latence', court: 'Écran et latence', texte: 'Fréquence réelle, images sautées, délai entre le clic et l\'image, netteté et pixels morts.', duree: '2 min' },
       { href: '/ping', nom: 'Ping et connexion', court: 'Ping', texte: 'Latence, gigue et pertes de ta connexion, avec des conseils pour jouer en ligne.', duree: '30 s' },
     ],
   },
