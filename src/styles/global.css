@@ -377,3 +377,15 @@ dialog.partage h2 { font-size: var(--t-xl); font-style: italic; margin: 0 2rem 1
 }
 .partage-fermer:hover { color: var(--texte); border-color: var(--violet); }
 .bouton-partager { margin-top: 0.25rem; }
+
+/* --- Mention « Lien affilié » (à placer juste à côté de chaque lien affilié) --- */
+.badge-affilie {
+  display: inline-block;
+  padding: 0.1em 0.45em;
+  font: 600 var(--t-xs)/1.4 var(--corps);
+  color: #ffd15c;
+  border: 1px solid rgb(255 209 92 / 0.55);
+  border-radius: var(--rayon);
+  white-space: nowrap;
+  vertical-align: 0.1em;
+}

@@ -1,0 +1,61 @@
+---
+import Base from '../layouts/Base.astro';
+import { lien } from '../lib/lien';
+import { MONETISE, EDITEUR } from '../data/editeur';
+---
+<Base title="Transparence et affiliation" description="Comment Fragx est financé, ce qu'est un lien affilié et nos engagements : outils gratuits, recommandations indépendantes, liens toujours signalés.">
+  <article class="conteneur article">
+    <h1>Transparence et affiliation</h1>
+    <p class="chapo">
+      Fragx est gratuit et le restera. Voici comment le site pourra couvrir ses frais, et ce que ça change pour toi : rien sur le prix, et tout est signalé.
+    </p>
+
+    <section class="etat panneau" aria-labelledby="t-etat">
+      <h2 id="t-etat">Aujourd'hui</h2>
+      {MONETISE
+        ? <p>Certaines pages « meilleur matériel » contiennent des liens affiliés. Chacun est accompagné de la mention <span class="badge-affilie">Lien affilié</span>.</p>
+        : <p>Le site ne contient <strong>aucun lien affilié ni publicité</strong>. Cette page explique à l'avance comment ils fonctionneront, s'ils sont ajoutés.</p>}
+    </section>
+
+    <h2>Qu'est-ce qu'un lien affilié ?</h2>
+    <p>
+      C'est un lien vers une boutique (par exemple Amazon) qui permet à la boutique de savoir que tu viens de Fragx.
+      Si tu achètes après avoir cliqué, la boutique reverse une petite commission au site. <strong>Le prix que tu paies est exactement le même</strong> qu'en allant directement sur la boutique.
+    </p>
+
+    <h2>Nos engagements</h2>
+    <ol class="engagements">
+      <li><strong>Les outils restent gratuits</strong>, sans compte et sans limite : diagnostic, benchmark, convertisseur, entraînement de visée.</li>
+      <li><strong>Chaque lien affilié est signalé</strong> par la mention <span class="badge-affilie">Lien affilié</span>, juste à côté du lien.</li>
+      <li><strong>Les recommandations ne dépendent pas des commissions.</strong> Un produit est conseillé pour ses caractéristiques et son rapport qualité-prix, y compris quand aucune boutique partenaire ne le vend.</li>
+      <li><strong>Pas de faux avis.</strong> Fragx ne publie ni avis inventés, ni notes de clients fictifs. Quand un produit n'a pas été testé directement, la page le dit et cite ses sources.</li>
+      <li><strong>Les recommandations matériel restent en dessous des outils</strong> : Fragx est d'abord un site d'outils et de conseils, pas une boutique.</li>
+      <li><strong>Pas de traceur sans ton accord.</strong> Si de la publicité est ajoutée un jour, ton consentement sera demandé avant tout cookie publicitaire.</li>
+    </ol>
+
+    <h2>Programmes concernés</h2>
+    <p>
+      Les programmes envisagés sont Amazon Partenaires et des boutiques spécialisées via des plateformes d'affiliation
+      (Awin, Effiliation). La liste exacte sera indiquée ici dès qu'un programme sera actif.
+    </p>
+
+    <p class="retour">
+      {EDITEUR.contact
+        ? <>Une question ou une erreur à signaler ? Écris à <a href={`mailto:${EDITEUR.contact}`}>{EDITEUR.contact}</a>.</>
+        : <>Les informations sur l'éditeur et l'hébergeur sont sur la page <a href={lien('/mentions-legales')}>Mentions légales</a>.</>}
+    </p>
+  </article>
+</Base>
+
+<style>
+  .article { padding-block: clamp(2rem, 6vw, 3.5rem); max-width: calc(68ch + 2 * var(--gouttiere)); }
+  h2 { font-size: var(--t-xl); margin-top: 2rem; font-style: italic; }
+  p, li { color: #d6d5e6; }
+  strong { color: var(--texte); }
+  .etat { margin: 1.5rem 0 1rem; }
+  .etat h2 { margin-top: 0; font-size: var(--t-l); }
+  .etat p { margin: 0; }
+  .engagements { padding-left: 1.4rem; display: grid; gap: 0.75rem; }
+  .engagements li::marker { color: var(--cyan); font-family: var(--titre); font-weight: 700; }
+  .retour { margin-top: 2rem; color: var(--gris); }
+</style>

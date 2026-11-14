@@ -11,6 +11,7 @@ export const GET: APIRoute = async ({ site }) => {
     ...CATEGORIES.flatMap((c) => c.outils.map((o) => o.href)),
     ...guides.map((g) => `/guides/${g.id}`),
     '/mentions-legales',
+    '/transparence',
   ];
   const urls = [...new Set(chemins)].map((c) => {
     const loc = new URL(lien(c).replace(/\/?$/, '/'), site).href;

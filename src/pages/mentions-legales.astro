@@ -1,26 +1,91 @@
 ---
 import Base from '../layouts/Base.astro';
+import { lien } from '../lib/lien';
+import { EDITEUR, HEBERGEUR, MONETISE } from '../data/editeur';
+
+const pro = EDITEUR.statut === 'professionnel';
+const manque = (v?: string) => !v || !v.trim();
+const date = new Date(EDITEUR.miseAJour + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+// Empêche de publier une page professionnelle incomplète par erreur
+if (pro) {
+  const absents = (['nom', 'adresse', 'telephone', 'contact', 'directeurPublication'] as const).filter((k) => manque(EDITEUR[k]));
+  if (absents.length || manque(HEBERGEUR.telephone)) {
+    throw new Error(`Mentions légales : statut professionnel incomplet (${[...absents, ...(manque(HEBERGEUR.telephone) ? ['telephone de l\'hébergeur'] : [])].join(', ')}). Complète src/data/editeur.ts.`);
+  }
+}
+if (MONETISE && !pro) {
+  console.warn('[Fragx] Le site est marqué comme monétisé mais l\'éditeur est en statut non professionnel : vérifie src/data/editeur.ts.');
+}
 ---
-<Base title="Mentions légales et confidentialité">
+<Base title="Mentions légales et confidentialité" description="Mentions légales de Fragx, hébergement, données personnelles et cookies.">
   <article class="conteneur article">
     <h1>Mentions légales et confidentialité</h1>
+    <p class="maj">Dernière mise à jour : {date}.</p>
 
     <h2>Éditeur du site</h2>
-    <p>[À compléter : nom et prénom ou raison sociale, adresse ou mention d'éditeur non professionnel, adresse e-mail de contact, directeur de la publication.]</p>
+    {pro ? (
+      <ul class="infos">
+        <li><span>Éditeur</span> {EDITEUR.nom}</li>
+        <li><span>Adresse</span> {EDITEUR.adresse}</li>
+        <li><span>Téléphone</span> {EDITEUR.telephone}</li>
+        <li><span>E-mail</span> <a href={`mailto:${EDITEUR.contact}`}>{EDITEUR.contact}</a></li>
+        {EDITEUR.immatriculation && <li><span>Immatriculation</span> {EDITEUR.immatriculation}</li>}
+        <li><span>Directeur de la publication</span> {EDITEUR.directeurPublication}</li>
+      </ul>
+    ) : (
+      <>
+        <p>
+          Fragx est édité par une personne physique, à titre non professionnel. Conformément à l'article 1-1 (II)
+          de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique, l'éditeur a choisi de ne pas
+          rendre publique son identité. Les coordonnées de l'hébergeur figurent ci-dessous.
+        </p>
+        {EDITEUR.contact && <p>Contact : <a href={`mailto:${EDITEUR.contact}`}>{EDITEUR.contact}</a></p>}
+      </>
+    )}
 
     <h2>Hébergement</h2>
-    <p>[À compléter : nom, adresse et téléphone de l'hébergeur.]</p>
+    <ul class="infos">
+      <li><span>Hébergeur</span> {HEBERGEUR.nom}</li>
+      <li><span>Adresse</span> {HEBERGEUR.adresse}</li>
+      {HEBERGEUR.telephone && <li><span>Téléphone</span> {HEBERGEUR.telephone}</li>}
+      <li><span>Site</span> <a href={HEBERGEUR.site} rel="noopener">{HEBERGEUR.site.replace('https://', '')}</a></li>
+    </ul>
 
     <h2>Données personnelles</h2>
     <p>
-      Fragx ne demande aucun compte et ne collecte aucune donnée personnelle sur ses serveurs.
-      Les informations saisies dans les outils (configuration, sensibilité, scores et records) sont enregistrées
-      uniquement dans le stockage local de ton navigateur, sur ton appareil. Tu peux les effacer à tout moment
-      en supprimant les données du site dans les paramètres de ton navigateur.
+      Fragx ne propose aucun compte et ne stocke aucune donnée personnelle sur un serveur. Tes réglages, scores,
+      records et badges sont enregistrés uniquement dans le stockage local de ton navigateur, sur ton appareil.
+      Tu peux tout effacer à tout moment en supprimant les données du site dans les paramètres de ton navigateur.
     </p>
+    <p>Quelques services extérieurs reçoivent toutefois ton adresse IP, comme pour toute visite d'un site web :</p>
+    <ul>
+      <li>
+        <strong>GitHub</strong>, qui héberge le site, enregistre des journaux techniques des visites
+        (voir la <a href="https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">déclaration de confidentialité de GitHub</a>).
+      </li>
+      <li>
+        Le <strong><a href={lien('/ping')}>test de ping</a></strong> envoie de petites requêtes vides à des serveurs de
+        Cloudflare et de Google, uniquement quand tu lances le test, pour mesurer le temps de réponse.
+      </li>
+    </ul>
     <p>
-      Le site n'utilise ni cookie publicitaire, ni outil de mesure d'audience, ni police de caractères chargée
-      depuis un service tiers.
+      Aucun numéro de carte, mot de passe ni autre donnée sensible n'est demandé sur Fragx.
+    </p>
+
+    <h2>Cookies et mesure d'audience</h2>
+    <p>
+      Fragx n'utilise aucun cookie, aucun outil de mesure d'audience et aucun traceur publicitaire. Les polices
+      de caractères sont hébergées sur le site lui-même. Si de la publicité ou un service tiers déposant des
+      traceurs est ajouté un jour, ton consentement te sera demandé avant tout dépôt.
+    </p>
+
+    <h2>Liens affiliés</h2>
+    <p>
+      {MONETISE
+        ? <>Certaines pages contiennent des liens affiliés, toujours signalés comme tels. </>
+        : <>Le site ne contient aucun lien affilié pour le moment. </>}
+      Le fonctionnement et nos engagements sont expliqués sur la page <a href={lien('/transparence')}>Transparence et affiliation</a>.
     </p>
 
     <h2>Marques</h2>
@@ -33,6 +98,13 @@ import Base from '../layouts/Base.astro';
 
 <style>
   .article { padding-block: clamp(2rem, 6vw, 3.5rem); max-width: calc(68ch + 2 * var(--gouttiere)); }
+  .maj { color: var(--gris); font-size: var(--t-s); }
   h2 { font-size: var(--t-xl); margin-top: 2rem; }
-  p { color: #d6d5e6; }
+  p, li { color: #d6d5e6; }
+  strong { color: var(--texte); }
+  ul { padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+  .infos { list-style: none; padding: 0; }
+  .infos li { display: grid; grid-template-columns: 13rem 1fr; gap: 0 1rem; }
+  .infos span { color: var(--gris); }
+  @media (max-width: 40rem) { .infos li { grid-template-columns: 1fr; } }
 </style>
