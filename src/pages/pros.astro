@@ -2,10 +2,9 @@
 import Base from '../layouts/Base.astro';
 import { lien } from '../lib/lien';
 import { PROS } from '../data/pros';
-import { JEUX } from '../data/jeux';
+import { jeuParId, cm360 as calculCm360 } from '../data/jeux';
 
-const yaw = (id: string) => JEUX.find((j) => j.id === id)!.yaw;
-const cm360 = (id: string, sens: number, dpi: number) => (360 / (sens * yaw(id) * dpi)) * 2.54;
+const cm360 = (id: string, sens: number, dpi: number) => calculCm360(jeuParId(id)!, sens, dpi);
 const nb = (v: number, d = 0) => v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
 const comparer = (id: string, sens: number, dpi: number) => `${lien('/sensibilite')}?jeu=${id}&sens=${sens}&dpi=${dpi}`;
 ---

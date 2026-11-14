@@ -1,12 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
+import { lien } from '../lib/lien';
 import { JEUX } from '../data/jeux';
 ---
-<Base title="Convertisseur de sensibilité" description="Convertis ta sensibilité souris entre Valorant, Fortnite, Apex Legends, Call of Duty et Battlefield, avec le cm/360 et l'eDPI.">
+<Base title="Convertisseur de sensibilité et eDPI" description="Convertis ta sensibilité souris entre Valorant, Fortnite, Apex Legends, Call of Duty, Battlefield 6, CS2 et Overwatch 2. Calcul du cm/360 et de l'eDPI, changement de DPI.">
   <div class="conteneur en-tete-page">
     <h1>Convertisseur de sensibilité</h1>
     <p class="chapo">
-      Indique ta sensibilité dans un jeu : on calcule la valeur qui donne exactement la même rotation dans les autres.
+      Indique ta sensibilité dans un jeu : tu obtiens la valeur qui donne exactement la même rotation dans les autres,
+      ton eDPI et la distance de souris pour un tour complet.
     </p>
   </div>
 
@@ -20,128 +22,241 @@ import { JEUX } from '../data/jeux';
       </div>
       <div>
         <label for="sens">Sensibilité dans ce jeu <span class="aide" id="format"></span></label>
-        <input id="sens" name="sens" type="number" inputmode="decimal" step="any" min="0" value="0.4" />
+        <input id="sens" name="sens" type="text" inputmode="decimal" autocomplete="off" value="0,4" aria-describedby="erreur-sens" />
+        <span class="erreur" id="erreur-sens" aria-live="polite"></span>
       </div>
       <div>
-        <label for="dpi">DPI de la souris</label>
-        <input id="dpi" name="dpi" type="number" inputmode="numeric" step="50" min="50" value="800" />
+        <label for="dpi">DPI de la souris <span class="aide">Dans le logiciel de ta souris (400, 800, 1600…)</span></label>
+        <input id="dpi" name="dpi" type="text" inputmode="numeric" autocomplete="off" value="800" aria-describedby="erreur-dpi" />
+        <span class="erreur" id="erreur-dpi" aria-live="polite"></span>
       </div>
+      <a class="lien-visee" id="lien-visee" href={lien('/visee')}>S'entraîner avec cette sensibilité</a>
     </form>
 
-    <div>
+    <div class="resultats">
       <div class="mesures">
-        <div class="mesure">
+        <div class="mesure principale">
           <span class="chiffre" id="cm360">--</span>
-          <span class="libelle">cm pour un tour complet (cm/360)</span>
+          <span class="libelle">cm pour un tour complet</span>
         </div>
         <div class="mesure">
           <span class="chiffre" id="edpi">--</span>
-          <span class="libelle">eDPI dans le jeu de départ</span>
+          <span class="libelle">eDPI <span id="edpi-jeu"></span></span>
+        </div>
+        <div class="mesure">
+          <span class="chiffre" id="pouces">--</span>
+          <span class="libelle">pouces pour un tour</span>
         </div>
       </div>
+      <p class="repere" id="repere"></p>
 
+      <h2 class="titre-table">Même visée dans les autres jeux</h2>
       <table>
         <caption class="visuellement-cache">Sensibilité équivalente par jeu</caption>
-        <thead><tr><th scope="col">Jeu</th><th scope="col">Sensibilité équivalente</th></tr></thead>
+        <thead><tr><th scope="col">Jeu</th><th scope="col">Sensibilité à régler</th><th scope="col"><span class="visuellement-cache">Copier</span></th></tr></thead>
         <tbody id="equivalences"></tbody>
       </table>
+      <p class="statut-copie" id="statut-copie" aria-live="polite"></p>
+
+      <section class="changer-dpi panneau" aria-labelledby="t-dpi">
+        <h2 id="t-dpi">Changer de DPI sans changer ta visée</h2>
+        <div class="ligne-dpi">
+          <div>
+            <label for="nouveau-dpi">Nouveau DPI</label>
+            <input id="nouveau-dpi" type="text" inputmode="numeric" autocomplete="off" value="1600" />
+          </div>
+          <p class="resultat-dpi">Nouvelle sensibilité : <span class="chiffre" id="nouvelle-sens">--</span></p>
+        </div>
+      </section>
     </div>
   </div>
 
   <div class="conteneur section notes">
-    <h2>Bon à savoir</h2>
+    <h2>Comprendre les chiffres</h2>
     <p>
-      La conversion porte sur la visée sans zoom (hipfire). La visée avec lunette dépend du champ de vision
-      et des multiplicateurs propres à chaque jeu : règle-la ensuite dans le jeu.
+      <strong>cm pour un tour</strong> : la distance à parcourir sur ton tapis pour faire un tour complet dans le jeu.
+      C'est la seule mesure comparable d'un jeu à l'autre. Plus elle est grande, plus ta sensibilité est basse.
     </p>
     <p>
-      Pour Fortnite, la valeur correspond au pourcentage des réglages « Sensibilité X » et « Sensibilité Y ».
-      Les valeurs de conversion de Battlefield 6 n'ont pas encore été vérifiées : celles affichées correspondent à Battlefield 2042.
+      <strong>eDPI</strong> : sensibilité multipliée par le DPI. Il sert à comparer les joueurs <em>d'un même jeu</em> :
+      un eDPI de 280 sur Valorant n'a rien à voir avec 280 sur Apex. Pour Fortnite, on utilise la sensibilité
+      en valeur décimale (8 % devient 0,08).
     </p>
     <p>
-      Repères : la plupart des joueurs compétitifs de jeux tactiques (Valorant, Counter-Strike) jouent entre 25 et 50 cm/360 ;
-      les jeux plus rapides (Apex, Call of Duty, Fortnite) se jouent souvent un peu plus vite.
+      La conversion porte sur la visée sans zoom. La visée avec lunette dépend du champ de vision et des
+      multiplicateurs propres à chaque jeu : règle-la ensuite dans le jeu.
+    </p>
+    <h3>Sources et fiabilité</h3>
+    <p>
+      Les éditeurs ne publient pas ces valeurs : elles proviennent de mesures de la communauté.
+      La formule de <strong>Battlefield 6</strong> est une estimation (relation non proportionnelle mesurée
+      par <a href="https://senslab.pro/sensitivity/battlefield6" rel="noopener" target="_blank">senslab.pro</a>) :
+      vérifie le résultat en jeu. Valeurs relevées en novembre 2026 ; une mise à jour d'un jeu peut les changer.
     </p>
   </div>
 </Base>
 
-<script define:vars={{ jeux: JEUX }}>
-  const CLE = 'fragx.sensibilite';
-  const form = document.getElementById('conv');
-  const source = form.elements.namedItem('source');
-  const sens = form.elements.namedItem('sens');
-  const dpi = form.elements.namedItem('dpi');
+<style>
+  .disposition { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: 2rem; align-items: start; }
+  form { display: grid; gap: 1rem; }
+  .erreur { display: block; min-height: 1.2em; font-size: var(--t-xs); color: var(--alerte); margin-top: 0.25rem; }
+  input[aria-invalid='true'] { border-color: var(--alerte); }
+  .lien-visee { font-size: var(--t-s); }
+  .mesures { display: flex; flex-wrap: wrap; gap: 1.5rem 2.5rem; margin-bottom: 0.75rem; align-items: end; }
+  .mesure { display: grid; gap: 0.25rem; }
+  .mesure .chiffre { font-size: var(--t-2xl); }
+  .principale .chiffre { font-size: var(--t-4xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
+  .libelle { color: var(--gris); font-size: var(--t-s); }
+  .repere { color: var(--gris); margin-bottom: 1.5rem; min-height: 1.5em; }
+  .titre-table { font-size: var(--t-l); font-style: italic; margin-bottom: 0.5rem; }
+  tbody :global(th) { color: var(--texte); font-weight: 500; font-size: var(--t-m); }
+  tbody :global(.estimation) { display: block; color: #ffd15c; font-size: var(--t-xs); font-weight: 400; }
+  tbody :global(td.chiffre) { font-size: var(--t-xl); }
+  tbody :global(td.hors) { font-size: var(--t-s); color: var(--gris); font-family: var(--corps); font-weight: 400; }
+  tbody :global(.copier) {
+    font: 600 var(--t-xs)/1 var(--titre); color: var(--gris); background: none; cursor: pointer;
+    border: 1px solid var(--trait); border-radius: var(--rayon); padding: 0.4rem 0.6rem;
+  }
+  tbody :global(.copier:hover) { color: var(--texte); border-color: var(--cyan); }
+  .statut-copie { min-height: 1.4em; font-size: var(--t-s); color: var(--ok); margin: 0.5rem 0 0; }
+  .changer-dpi { margin-top: 1.5rem; }
+  .changer-dpi h2 { font-size: var(--t-l); font-style: italic; }
+  .ligne-dpi { display: flex; gap: 1.5rem; align-items: end; flex-wrap: wrap; }
+  .ligne-dpi > div { width: 10rem; }
+  .resultat-dpi { margin: 0 0 0.5rem; }
+  .resultat-dpi .chiffre { font-size: var(--t-xl); color: var(--cyan); }
+  .notes h2 { font-size: var(--t-xl); }
+  .notes h3 { font-size: var(--t-l); margin-top: 1.5rem; }
+  .notes p { color: var(--gris); }
+  .notes strong, .notes em { color: var(--texte); }
+  @media (max-width: 48rem) { .disposition { grid-template-columns: 1fr; } }
+</style>
 
+<script>
+  import { JEUX, jeuParId, degresParCount, sensPour, cm360, edpi, type Jeu } from '../data/jeux';
+  import { PROS } from '../data/pros';
+
+  const CLE = 'fragx.sensibilite';
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('conv');
+  const source = $<HTMLSelectElement>('source');
+  const sens = $<HTMLInputElement>('sens');
+  const dpi = $<HTMLInputElement>('dpi');
+  const nouveauDpi = $<HTMLInputElement>('nouveau-dpi');
+
+  const nombre = (n: number, dec: number) => n.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  /** Lit un nombre saisi avec une virgule ou un point. */
+  const lire = (v: string) => { const n = parseFloat(v.trim().replace(/\s/g, '').replace(',', '.')); return Number.isFinite(n) ? n : NaN; };
+  const affiche = (jeu: Jeu, v: number) => nombre(v, jeu.decimales) + (jeu.pourcent ? ' %' : '');
+
+  // Valeurs mémorisées, puis valeurs de l'adresse (?jeu=valorant&sens=0.35&dpi=800)
   try {
     const d = JSON.parse(localStorage.getItem(CLE) || '{}');
-    if (d.source) source.value = d.source;
-    if (d.sens) sens.value = d.sens;
-    if (d.dpi) dpi.value = d.dpi;
-  } catch (e) { /* stockage indisponible */ }
-
-  // Valeurs passées dans l'adresse (?jeu=valorant&sens=0.35&dpi=800), depuis la page des pros
+    if (d.source && jeuParId(d.source)) source.value = d.source;
+    if (d.sens) sens.value = String(d.sens).replace('.', ',');
+    if (d.dpi) dpi.value = String(d.dpi);
+  } catch { /* stockage indisponible */ }
   const params = new URLSearchParams(location.search);
-  if (params.get('jeu') && jeux.some((j) => j.id === params.get('jeu'))) source.value = params.get('jeu');
-  if (params.get('sens')) sens.value = params.get('sens');
-  if (params.get('dpi')) dpi.value = params.get('dpi');
+  const pJeu = params.get('jeu');
+  if (pJeu && jeuParId(pJeu)) source.value = pJeu;
+  if (params.get('sens')) sens.value = params.get('sens')!.replace('.', ',');
+  if (params.get('dpi')) dpi.value = params.get('dpi')!;
 
-  const nombre = (n, dec) => n.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  function signaler(champ: HTMLInputElement, message: string) {
+    champ.setAttribute('aria-invalid', message ? 'true' : 'false');
+    $(`erreur-${champ.id}`).textContent = message;
+  }
+
+  /** Repère : où se situe l'utilisateur par rapport aux pros relevés pour ce jeu. */
+  function repere(jeu: Jeu, cm: number): string {
+    const groupe = PROS.find((g) => g.id === jeu.id);
+    if (!groupe || groupe.pros.length < 3) return '';
+    const valeurs = groupe.pros.map((p) => cm360(jeu, p.sens, p.dpi)).sort((a, b) => a - b);
+    const min = valeurs[0], max = valeurs[valeurs.length - 1];
+    const pos = cm < min ? 'Tu joues plus rapide qu\'eux.' : cm > max ? 'Tu joues plus lent qu\'eux.' : 'Tu es dans la même fourchette.';
+    return `Repère : les pros relevés sur ${jeu.nom} jouent entre ${nombre(min, 0)} et ${nombre(max, 0)} cm par tour. ${pos}`;
+  }
+
+  function vider() {
+    for (const id of ['cm360', 'edpi', 'pouces', 'nouvelle-sens']) $(id).textContent = '--';
+    $('repere').textContent = '';
+    $('equivalences').replaceChildren();
+  }
 
   function calculer() {
-    const jeu = jeux.find((j) => j.id === source.value);
-    document.getElementById('format').textContent = jeu.format;
-    const s = parseFloat(String(sens.value).replace(',', '.'));
-    const d = parseFloat(dpi.value);
-    const corps = document.getElementById('equivalences');
-    if (!(s > 0) || !(d > 0)) {
-      document.getElementById('cm360').textContent = '--';
-      document.getElementById('edpi').textContent = '--';
-      corps.replaceChildren();
-      return;
-    }
-    try { localStorage.setItem(CLE, JSON.stringify({ source: source.value, sens: sens.value, dpi: dpi.value })); } catch (e) { /* indisponible */ }
+    const jeu = jeuParId(source.value)!;
+    $('format').textContent = jeu.format;
+    $('edpi-jeu').textContent = `sur ${jeu.nom}`;
+    const s = lire(sens.value);
+    const d = lire(dpi.value);
+    signaler(sens, !(s > 0) ? 'Indique une sensibilité supérieure à 0.' : '');
+    signaler(dpi, !(d >= 50 && d <= 50000) ? 'Indique un DPI entre 50 et 50 000.' : '');
+    if (!(s > 0) || !(d >= 50 && d <= 50000)) { vider(); return; }
 
-    // Degrés par mouvement : s * yaw ; cm/360 = 360 / (s * yaw * dpi) * 2,54
-    const degresParPouce = s * jeu.yaw * d;
-    const cm360 = (360 / degresParPouce) * 2.54;
-    document.getElementById('cm360').textContent = nombre(cm360, 1);
-    // Fortnite : la sensibilité est un pourcentage, l'eDPI se calcule sur la valeur décimale
-    document.getElementById('edpi').textContent = jeu.id === 'fortnite' ? nombre((s / 100) * d, 1) : nombre(s * d, 0);
+    try { localStorage.setItem(CLE, JSON.stringify({ source: jeu.id, sens: s, dpi: d })); } catch { /* indisponible */ }
 
-    corps.replaceChildren(...jeux.filter((j) => j.id !== jeu.id).map((j) => {
+    const degres = degresParCount(jeu, s);
+    const cm = cm360(jeu, s, d);
+    $('cm360').textContent = nombre(cm, 1);
+    $('pouces').textContent = nombre(cm / 2.54, 1);
+    $('edpi').textContent = nombre(edpi(jeu, s, d), jeu.pourcent ? 1 : 0);
+    $('repere').textContent = repere(jeu, cm);
+
+    $('equivalences').replaceChildren(...JEUX.filter((j) => j.id !== jeu.id).map((j) => {
       const tr = document.createElement('tr');
       const th = document.createElement('th');
       th.scope = 'row';
       th.textContent = j.nom;
+      if (j.estimation) {
+        const e = document.createElement('span');
+        e.className = 'estimation';
+        e.textContent = 'Estimation, à vérifier en jeu';
+        th.append(e);
+      }
       const td = document.createElement('td');
-      const valeur = (s * jeu.yaw) / j.yaw;
-      td.textContent = nombre(valeur, j.decimales) + (j.id === 'fortnite' ? ' %' : '');
-      td.className = 'chiffre';
-      tr.append(th, td);
+      const tdCopier = document.createElement('td');
+      const v = sensPour(j, degres);
+      if (v === null) {
+        td.className = 'hors';
+        td.textContent = 'Sensibilité trop basse pour ce jeu';
+      } else {
+        td.className = 'chiffre';
+        td.textContent = affiche(j, v);
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'copier';
+        b.textContent = 'Copier';
+        b.setAttribute('aria-label', `Copier la sensibilité ${j.nom}`);
+        // Les jeux attendent un point décimal, sans espace
+        b.dataset.valeur = v.toFixed(j.decimales);
+        b.dataset.jeu = j.nom;
+        tdCopier.append(b);
+      }
+      tr.append(th, td, tdCopier);
       return tr;
     }));
+
+    // Changer de DPI : même rotation par centimètre, donc degrés par count × DPI constant
+    const nd = lire(nouveauDpi.value);
+    const ns = nd >= 50 ? sensPour(jeu, (degres * d) / nd) : null;
+    $('nouvelle-sens').textContent = ns === null ? '--' : affiche(jeu, ns);
+
   }
 
+  $('equivalences').addEventListener('click', async (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.copier');
+    if (!b) return;
+    const statut = $('statut-copie');
+    try {
+      await navigator.clipboard.writeText(b.dataset.valeur!);
+      statut.textContent = `Sensibilité ${b.dataset.jeu} copiée : ${b.dataset.valeur}`;
+    } catch {
+      statut.textContent = `Copie impossible dans ce navigateur : note la valeur ${b.dataset.valeur}`;
+    }
+  });
+
   form.addEventListener('input', calculer);
+  nouveauDpi.addEventListener('input', calculer);
   form.addEventListener('submit', (e) => e.preventDefault());
   calculer();
 </script>
-
-<style>
-  .disposition {
-    display: grid;
-    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
-    gap: 2rem;
-    align-items: start;
-  }
-  form { display: grid; gap: 1rem; }
-  .mesures { display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 1.5rem; }
-  .mesure { display: grid; gap: 0.25rem; }
-  .mesure .chiffre { font-size: var(--t-4xl); color: var(--cyan); text-shadow: var(--lueur-cyan); }
-  .libelle { color: var(--gris); font-size: var(--t-s); }
-  tbody :global(th) { color: var(--texte); font-weight: 500; font-size: var(--t-m); }
-  tbody :global(td) { font-size: var(--t-xl); }
-  .notes h2 { font-size: var(--t-xl); }
-  .notes p { color: var(--gris); }
-  @media (max-width: 48rem) { .disposition { grid-template-columns: 1fr; } }
-</style>

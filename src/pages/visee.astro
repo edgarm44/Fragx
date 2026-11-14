@@ -147,7 +147,7 @@ import { JEUX } from '../data/jeux';
   import { generateur } from '../lib/aleatoire';
   import { sonTir, sonTouche, preparerSon, sonActif, reglerSon } from '../lib/son';
   import { verifierBadges } from '../lib/badges';
-  import { JEUX } from '../data/jeux';
+  import { JEUX, degresParCount, cm360 } from '../data/jeux';
   import { ouvrirPartage, type Resultat } from '../lib/partage';
 
   // ---------------------------------------------------------------------
@@ -185,10 +185,10 @@ import { JEUX } from '../data/jeux';
     eSon.checked = sonActif();
     resumer();
   }
-  const yawJeu = () => JEUX.find((j) => j.id === reglages.jeu)?.yaw ?? 0.07;
+  const jeuActuel = () => JEUX.find((j) => j.id === reglages.jeu) ?? JEUX[0];
   function resumer() {
     const j = JEUX.find((x) => x.id === reglages.jeu)!;
-    const cm = (360 / (reglages.sens * j.yaw * reglages.dpi)) * 2.54;
+    const cm = cm360(j, reglages.sens, reglages.dpi);
     const sens = j.id === 'fortnite' ? `${reglages.sens} %` : String(reglages.sens).replace('.', ',');
     document.getElementById('resume-reglages')!.textContent =
       `${j.nom}, ${sens} à ${reglages.dpi} DPI, soit ${Number.isFinite(cm) ? cm.toFixed(1).replace('.', ',') : '--'} cm pour un tour, ${reglages.controle === 'capture' ? 'souris capturée' : 'curseur libre'}`;
@@ -562,7 +562,7 @@ import { JEUX } from '../data/jeux';
   document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement !== canvas || !actif) return;
     if (performance.now() < ignorerJusqua || Math.abs(e.movementX) > SAUT_MAX || Math.abs(e.movementY) > SAUT_MAX) return;
-    const k = reglages.sens * yawJeu();
+    const k = degresParCount(jeuActuel(), reglages.sens);
     camLacet += e.movementX * k;
     camTangage = borner(camTangage - e.movementY * k, 89);
   });
