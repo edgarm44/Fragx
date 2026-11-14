@@ -1,10 +1,10 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Souris et écran" description="Mesure le taux d'interrogation réel de ta souris, teste la netteté des mouvements de ton écran et cherche les pixels morts.">
+<Base title="Test de souris et d'écran" description="Test de souris en ligne : clics par seconde (CPS), détection du double-clic parasite, taux d'interrogation réel. Plus la netteté de l'écran et les pixels morts.">
   <div class="conteneur en-tete-page">
     <h1>Souris et écran</h1>
-    <p class="chapo">Trois tests rapides pour vérifier que ton matériel donne ce qu'il promet.</p>
+    <p class="chapo">Des tests rapides pour vérifier que ta souris et ton écran donnent ce qu'ils promettent.</p>
   </div>
 
   <div class="conteneur blocs">
@@ -31,6 +31,58 @@ import Base from '../layouts/Base.astro';
           <p class="note" id="note-api"></p>
         </div>
       </div>
+    </section>
+
+    <section aria-labelledby="t-cps">
+      <h2 id="t-cps">Clics par seconde</h2>
+      <p class="intro">Clique le plus vite possible dans la zone avec le bouton gauche. Le chrono démarre au premier clic.</p>
+      <div class="cps">
+        <div class="zone-clic" id="zone-cps" role="button" tabindex="0" aria-describedby="t-cps">
+          <span class="chiffre grand-clic" id="cps-direct">0</span>
+          <span id="cps-consigne">Clique ici pour commencer</span>
+        </div>
+        <div class="mesures panneau">
+          <div class="choix" role="radiogroup" aria-label="Durée">
+            <button type="button" role="radio" aria-checked="true" data-duree="5">5 s</button>
+            <button type="button" role="radio" aria-checked="false" data-duree="10">10 s</button>
+          </div>
+          <div>
+            <span class="libelle">Résultat</span>
+            <span class="chiffre grand" id="cps-resultat">--</span>
+          </div>
+          <dl>
+            <div><dt>Clics</dt><dd class="chiffre" id="cps-clics">--</dd></div>
+            <div><dt>Record sur cet appareil</dt><dd class="chiffre" id="cps-record">--</dd></div>
+          </dl>
+          <p class="note" id="cps-niveau"></p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-double">
+      <h2 id="t-double">Double-clic parasite</h2>
+      <p class="intro">
+        Un bouton usé peut envoyer deux clics alors que tu n'as appuyé qu'une fois. Fais une trentaine de clics
+        <strong>simples et calmes</strong> dans la zone, avec chaque bouton à tester. Un clic suivi d'un autre
+        en moins de 80 ms est signalé : c'est trop rapide pour un doigt humain.
+      </p>
+      <div class="double">
+        <div class="zone-clic" id="zone-double" tabindex="0" aria-describedby="t-double">
+          <span id="double-consigne">Clique ici, un clic à la fois</span>
+        </div>
+        <div class="panneau">
+          <table>
+            <caption class="visuellement-cache">Résultats par bouton</caption>
+            <thead><tr><th scope="col">Bouton</th><th scope="col">Clics</th><th scope="col">Suspects</th><th scope="col">Plus court écart</th></tr></thead>
+            <tbody id="double-tableau"></tbody>
+          </table>
+          <p class="verdict-double" id="double-verdict" aria-live="polite"></p>
+          <button class="bouton bouton-secondaire" type="button" id="double-raz">Remettre à zéro</button>
+        </div>
+      </div>
+      <p class="note">
+        Certaines souris filtrent déjà les rebonds dans leur logiciel : le test ne voit que ce qui arrive au navigateur.
+      </p>
     </section>
 
     <section aria-labelledby="t-mouvement">
@@ -124,7 +176,32 @@ import Base from '../layouts/Base.astro';
   }
   .ecran-couleur[data-discret] p { opacity: 0; }
 
-  @media (max-width: 52rem) { .polling { grid-template-columns: 1fr; } }
+  .cps, .double { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.5rem; align-items: stretch; }
+  .zone-clic {
+    min-height: 16rem;
+    display: grid; place-content: center; justify-items: center; gap: 0.5rem;
+    clip-path: var(--biseau);
+    background: radial-gradient(circle at 50% 50%, rgb(255 46 151 / 0.12), transparent 60%), #0d0726;
+    color: var(--gris); font-family: var(--titre); font-size: var(--t-l);
+    cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  }
+  .zone-clic:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+  .zone-clic[data-actif] { background: radial-gradient(circle at 50% 50%, rgb(25 227 255 / 0.18), transparent 65%), #0d0726; color: var(--cyan); }
+  .grand-clic { font-size: clamp(3rem, 8vw, 5rem); color: var(--texte); }
+  .choix { display: flex; gap: 0.4rem; }
+  .choix button {
+    font: 600 var(--t-s)/1 var(--titre); color: var(--gris); background: var(--plaque);
+    border: 1px solid var(--trait); border-radius: var(--rayon); padding: 0.5rem 0.8rem; cursor: pointer;
+  }
+  .choix button[aria-checked='true'] { color: var(--texte); border-color: var(--magenta); }
+  .choix button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .double .panneau { display: grid; gap: 0.75rem; align-content: start; }
+  .double .panneau .bouton { justify-self: start; }
+  .verdict-double { margin: 0; font-weight: 600; min-height: 1.5em; }
+  .verdict-double[data-n='ok'] { color: var(--ok); }
+  .verdict-double[data-n='alerte'] { color: var(--alerte); }
+  #double-tableau :global(td.suspect) { color: var(--alerte); font-weight: 700; }
+  @media (max-width: 52rem) { .polling, .cps, .double { grid-template-columns: 1fr; } }
 </style>
 
 <script>
@@ -261,6 +338,159 @@ import Base from '../layouts/Base.astro';
     b.addEventListener('click', () => {
       vitesse = Number(b.dataset.vitesse);
       for (const o of document.querySelectorAll('[data-vitesse]')) o.setAttribute('aria-checked', String(o === b));
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Clics par seconde
+  // ---------------------------------------------------------------------
+  {
+    const zone = document.getElementById('zone-cps')!;
+    const direct = document.getElementById('cps-direct')!;
+    const consigneCps = document.getElementById('cps-consigne')!;
+    const resultat = document.getElementById('cps-resultat')!;
+    const eClics = document.getElementById('cps-clics')!;
+    const eRecord = document.getElementById('cps-record')!;
+    const eNiveau = document.getElementById('cps-niveau')!;
+    const boutonsDuree = [...document.querySelectorAll<HTMLButtonElement>('[data-duree]')];
+    let duree = 5;
+    let clics = 0;
+    let debut = 0;
+    let enCours = false;
+    let bloqueJusqua = 0;
+    const cle = () => `fragx.cps.${duree}`;
+    const fmt = (v: number) => v.toFixed(1).replace('.', ',');
+    const lireRecord = () => { try { const v = localStorage.getItem(cle()); return v ? Number(v) : null; } catch { return null; } };
+    const afficherRecord = () => { const r = lireRecord(); eRecord.textContent = r === null ? '--' : `${fmt(r)} CPS`; };
+    function niveau(v: number) {
+      if (v >= 10) return 'Excellent : rythme de joueur compétitif.';
+      if (v >= 7) return 'Très bon.';
+      if (v >= 5) return 'Dans la moyenne.';
+      return 'Un peu lent : réessaie, poignet détendu.';
+    }
+    function tic() {
+      if (!enCours) return;
+      const ecoule = (performance.now() - debut) / 1000;
+      if (ecoule >= duree) { finir(); return; }
+      direct.textContent = String(clics);
+      consigneCps.textContent = `${fmt(Math.max(0, duree - ecoule))} s`;
+      requestAnimationFrame(tic);
+    }
+    function finir() {
+      enCours = false;
+      zone.removeAttribute('data-actif');
+      boutonsDuree.forEach((b) => (b.disabled = false));
+      const cps = clics / duree;
+      direct.textContent = String(clics);
+      bloqueJusqua = performance.now() + 700;
+      if (clics < 3) {
+        // un clic isolé (par exemple en arrivant sur la zone) ne compte pas comme un test
+        resultat.textContent = '--'; eClics.textContent = '--';
+        eNiveau.textContent = 'Test ignoré : moins de 3 clics.';
+        consigneCps.textContent = 'Clique pour commencer';
+        return;
+      }
+      resultat.textContent = `${fmt(cps)} CPS`;
+      eClics.textContent = String(clics);
+      eNiveau.textContent = niveau(cps);
+      const r = lireRecord();
+      if (r === null || cps > r) { try { localStorage.setItem(cle(), String(cps)); } catch { /* indisponible */ } eNiveau.textContent += ' Nouveau record.'; }
+      afficherRecord();
+      // un dernier clic lancé trop tard ne redémarre pas aussitôt le test (voir bloqueJusqua)
+      consigneCps.textContent = 'Clique pour recommencer';
+    }
+    function clic() {
+      if (performance.now() < bloqueJusqua) return;
+      if (!enCours) {
+        enCours = true; clics = 0; debut = performance.now();
+        zone.setAttribute('data-actif', '');
+        boutonsDuree.forEach((b) => (b.disabled = true));
+        resultat.textContent = '--'; eClics.textContent = '--'; eNiveau.textContent = '';
+        requestAnimationFrame(tic);
+      }
+      clics++;
+      direct.textContent = String(clics);
+    }
+    zone.addEventListener('mousedown', (e) => { if (e.button === 0) { e.preventDefault(); clic(); } });
+    zone.addEventListener('touchstart', (e) => { e.preventDefault(); clic(); }, { passive: false });
+    zone.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); clic(); } });
+    zone.addEventListener('contextmenu', (e) => e.preventDefault());
+    boutonsDuree.forEach((b) => b.addEventListener('click', () => {
+      duree = Number(b.dataset.duree);
+      boutonsDuree.forEach((o) => o.setAttribute('aria-checked', String(o === b)));
+      resultat.textContent = '--'; eClics.textContent = '--'; eNiveau.textContent = ''; direct.textContent = '0';
+      consigneCps.textContent = 'Clique ici pour commencer';
+      afficherRecord();
+    }));
+    afficherRecord();
+  }
+
+  // ---------------------------------------------------------------------
+  // Double-clic parasite
+  // ---------------------------------------------------------------------
+  {
+    const SEUIL = 80; // ms
+    const NOMS = ['Gauche', 'Molette', 'Droit', 'Arrière', 'Avant'];
+    const zone = document.getElementById('zone-double')!;
+    const consigne = document.getElementById('double-consigne')!;
+    const tableau = document.getElementById('double-tableau')!;
+    const verdict = document.getElementById('double-verdict')!;
+    type Stat = { clics: number; suspects: number; min: number; dernier: number };
+    let stats = new Map<number, Stat>();
+
+    function afficher() {
+      const lignes = [...stats.entries()].sort(([a], [b]) => a - b).map(([bouton, s]) => {
+        const tr = document.createElement('tr');
+        const cellules = [NOMS[bouton] ?? `Bouton ${bouton + 1}`, String(s.clics), String(s.suspects), Number.isFinite(s.min) ? `${Math.round(s.min)} ms` : '--'];
+        cellules.forEach((v, i) => {
+          const td = document.createElement(i === 0 ? 'th' : 'td');
+          if (i === 0) (td as HTMLTableCellElement).scope = 'row';
+          td.textContent = v;
+          if (i === 2 && s.suspects > 0) td.className = 'suspect';
+          tr.append(td);
+        });
+        return tr;
+      });
+      tableau.replaceChildren(...lignes);
+      const total = [...stats.values()].reduce((n, s) => n + s.clics, 0);
+      const suspects = [...stats.entries()].filter(([, s]) => s.suspects > 0);
+      if (suspects.length) {
+        verdict.dataset.n = 'alerte';
+        verdict.textContent = `Double-clic parasite probable sur : ${suspects.map(([b]) => (NOMS[b] ?? `bouton ${b + 1}`).toLowerCase()).join(', ')}. Refais le test en cliquant lentement pour confirmer.`;
+      } else if (total >= 30) {
+        verdict.dataset.n = 'ok';
+        verdict.textContent = 'Aucun double-clic parasite détecté.';
+      } else {
+        delete verdict.dataset.n;
+        verdict.textContent = total ? `Continue : ${total} clic${total > 1 ? 's' : ''} sur au moins 30.` : '';
+      }
+    }
+
+    zone.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      zone.focus();
+      const t = e.timeStamp;
+      const s = stats.get(e.button) ?? { clics: 0, suspects: 0, min: Infinity, dernier: -Infinity };
+      const ecart = t - s.dernier;
+      if (s.clics > 0) {
+        s.min = Math.min(s.min, ecart);
+        if (ecart < SEUIL) s.suspects++;
+      }
+      s.clics++;
+      s.dernier = t;
+      stats.set(e.button, s);
+      zone.setAttribute('data-actif', '');
+      consigne.textContent = `${NOMS[e.button] ?? 'Bouton'} : ${s.clics} clic${s.clics > 1 ? 's' : ''}`;
+      afficher();
+    });
+    zone.addEventListener('mouseup', (e) => e.preventDefault());
+    zone.addEventListener('auxclick', (e) => e.preventDefault());
+    zone.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.getElementById('double-raz')!.addEventListener('click', () => {
+      stats = new Map();
+      zone.removeAttribute('data-actif');
+      consigne.textContent = 'Clique ici, un clic à la fois';
+      afficher();
     });
   }
 
