@@ -9,7 +9,7 @@
  * ce qui imposerait un bandeau de consentement).
  */
 export const SOUTIEN = {
-  ACTIF: false,
+  ACTIF: true,
   url: 'https://ko-fi.com/edprime',
   plateforme: 'Ko-fi',
 };
