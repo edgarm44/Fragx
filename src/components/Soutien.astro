@@ -7,32 +7,34 @@ const { variante = 'outil' } = Astro.props;
 {soutienVisible && (variante === 'pied'
   ? <a class="soutien-pied" href={SOUTIEN.url} target="_blank" rel="noopener">Soutenir Fragx</a>
   : (
-    <aside class="conteneur" aria-label="Soutenir Fragx">
-      <div class="soutien">
-      <p>Cet outil t'a servi ? Fragx est gratuit, sans pub et sans compte.</p>
-      <a class="soutien-lien" href={SOUTIEN.url} target="_blank" rel="noopener">Soutenir Fragx</a>
-      <span class="soutien-via">via {SOUTIEN.plateforme}, nouvel onglet</span>
+    <aside class="conteneur" aria-labelledby="t-soutien">
+      <div class="soutien panneau">
+        <div class="soutien-texte">
+          <h2 id="t-soutien">Fragx t'aide à progresser ?</h2>
+          <p>Le site est gratuit, sans pub et sans compte. Un petit don aide à le faire vivre et à ajouter de nouveaux outils.</p>
+        </div>
+        <div class="soutien-action">
+          <a class="bouton bouton-principal soutien-lien" href={SOUTIEN.url} target="_blank" rel="noopener">Soutenir Fragx</a>
+          <span class="soutien-via">Don facultatif sur {SOUTIEN.plateforme} (nouvel onglet)</span>
+        </div>
       </div>
     </aside>
   ))}
 
 <style>
   .soutien {
-    display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 1rem;
-    margin-top: 3rem; padding-block: 1rem;
-    border-top: 1px solid var(--trait);
-    color: var(--gris); font-size: var(--t-s);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem 2rem;
+    margin-top: 3rem;
+    background: linear-gradient(110deg, rgb(255 46 151 / 0.18), rgb(139 92 255 / 0.18) 55%, rgb(25 227 255 / 0.12));
+    border: 1px solid rgb(255 46 151 / 0.45);
   }
-  .soutien p { margin: 0; }
-  .soutien-lien {
-    font: 600 var(--t-s)/1 var(--titre);
-    color: var(--texte); text-decoration: none;
-    padding: 0.45rem 0.8rem;
-    border: 1px solid var(--trait);
-    transition: border-color 0.15s, color 0.15s;
-  }
-  .soutien-lien:hover, .soutien-lien:focus-visible { border-color: var(--magenta); color: var(--magenta); }
-  .soutien-via { font-size: var(--t-xs); }
+  .soutien-texte { max-width: 52ch; }
+  .soutien h2 { margin: 0 0 0.4rem; font-size: var(--t-xl); font-style: italic; }
+  .soutien p { margin: 0; color: #d6d5e6; }
+  .soutien-action { display: grid; justify-items: center; gap: 0.4rem; }
+  .soutien-lien { font-size: var(--t-l); padding-inline: 1.6rem; }
+  .soutien-via { font-size: var(--t-xs); color: var(--gris); }
   .soutien-pied { color: var(--gris); }
   .soutien-pied:hover { color: var(--magenta); }
+  @media (max-width: 40rem) { .soutien-action { width: 100%; } .soutien-lien { width: 100%; text-align: center; } }
 </style>
