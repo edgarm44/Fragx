@@ -201,8 +201,12 @@ const GROUPES = [
   .cases { display: flex; gap: 1.25rem; margin-top: 0.75rem; flex-wrap: wrap; }
   .cases label { display: flex; gap: 0.4rem; align-items: center; margin: 0; font-weight: 400; color: var(--gris); }
   @media (max-width: 56rem) {
-    .disposition { grid-template-columns: 1fr; }
-    .colonne-apercu { position: static; }
+    .disposition { grid-template-columns: 1fr; gap: 1.5rem; }
+    /* Sur mobile : aperçu, puis réglages, puis code */
+    .colonne-apercu { display: contents; }
+    .apercu { order: 1; }
+    .reglages { order: 2; }
+    .code { order: 3; }
   }
 </style>
 
