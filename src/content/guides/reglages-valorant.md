@@ -1,8 +1,10 @@
 ---
-titre: Les meilleurs réglages graphiques pour Valorant
-description: Plus d'images par seconde et une image plus lisible, sans sacrifier la visibilité des adversaires.
+titre: "Setup et réglages Valorant"
+description: "Graphismes, souris et sensibilité : les réglages conseillés pour jouer à Valorant en compétition, avec les outils Fragx adaptés."
 jeu: Valorant
-misAJour: 2026-10-26
+misAJour: 2026-11-15
+verifie: 2026-11-15
+jeuId: valorant
 ---
 
 Valorant tourne bien sur la plupart des PC, mais quelques options changent beaucoup la fluidité et la lisibilité. Tout se règle dans **Paramètres > Vidéo**. Les noms exacts peuvent varier un peu selon la langue du jeu : le nom anglais est indiqué entre parenthèses.
@@ -34,8 +36,14 @@ Valorant tourne bien sur la plupart des PC, mais quelques options changent beauc
 
 Active **NVIDIA Reflex Low Latency** si tu as une carte NVIDIA. Avec une carte AMD, active **Anti-Lag** dans le logiciel AMD Adrenalin.
 
-## Pour aller plus loin
+## Souris et sensibilité
 
-Le [convertisseur de sensibilité](../../sensibilite/) et l'[éditeur de réticule](../../reticule/) complètent ces réglages. Pour vérifier que ton écran tourne bien à sa fréquence maximale, lance le [diagnostic du setup](../../setup/).
+| Réglage | Valeur conseillée | Pourquoi |
+|---|---|---|
+| DPI de la souris | 800 | La valeur la plus répandue, facile à convertir |
+| Sensibilité en jeu | 0,32 à 0,40 à 800 DPI (soit 256 à 320 d'eDPI) | Un point de départ pour la visée précise, à ajuster ensuite |
+| Multiplicateur de sensibilité en visée et en lunette | 1,0 | La même sensation en visée et sans visée |
+
+L'**eDPI** est le produit DPI × sensibilité : il permet de comparer des joueurs qui n'utilisent pas le même DPI.
 
 Source : [Esports.net, Best VALORANT Settings (février 2026)](https://www.esports.net/wiki/guides/best-valorant-settings/).

@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { lien } from '../lib/lien';
 import { MONETISE, EDITEUR } from '../data/editeur';
+import { SOUTIEN, soutienVisible } from '../data/soutien';
 ---
 <Base title="Transparence et affiliation" description="Comment Fragx est financé, ce qu'est un lien affilié et nos engagements : outils gratuits, recommandations indépendantes, liens toujours signalés.">
   <article class="conteneur article">
@@ -16,6 +17,17 @@ import { MONETISE, EDITEUR } from '../data/editeur';
         ? <p>Certaines pages « meilleur matériel » contiennent des liens affiliés. Chacun est accompagné de la mention <span class="badge-affilie">Lien affilié</span>.</p>
         : <p>Le site ne contient <strong>aucun lien affilié ni publicité</strong>. Cette page explique à l'avance comment ils fonctionneront, s'ils sont ajoutés.</p>}
     </section>
+
+    {soutienVisible && (
+      <>
+        <h2>Les dons</h2>
+        <p>
+          Tu peux soutenir Fragx par un don ponctuel sur <a href={SOUTIEN.url} target="_blank" rel="noopener">notre page {SOUTIEN.plateforme}</a>.
+          C'est entièrement facultatif : tous les outils restent gratuits et identiques, que tu donnes ou non.
+          Le paiement se fait sur le site de {SOUTIEN.plateforme}, jamais sur Fragx : aucune donnée bancaire ne passe par ce site.
+        </p>
+      </>
+    )}
 
     <h2>Qu'est-ce qu'un lien affilié ?</h2>
     <p>

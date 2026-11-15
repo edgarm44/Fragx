@@ -1,8 +1,10 @@
 ---
-titre: Les meilleurs réglages graphiques pour Battlefield 6
-description: Le préréglage qui fait gagner le plus de FPS en multijoueur et les effets visuels à couper.
+titre: "Setup et réglages Battlefield 6"
+description: "Le préréglage qui fait gagner le plus de FPS en multijoueur, les effets visuels à couper et la sensibilité, avec les outils Fragx adaptés."
 jeu: Battlefield
-misAJour: 2026-10-26
+misAJour: 2026-11-15
+verifie: 2026-11-15
+jeuId: bf6
 ---
 
 Battlefield 6 est exigeant pour le processeur et la carte graphique, surtout en multijoueur avec beaucoup de joueurs et de destructions. Ces réglages se trouvent dans les menus d'affichage et de graphismes ; les noms peuvent varier légèrement selon la langue du jeu.
@@ -28,4 +30,8 @@ Flou de mouvement de l'arme et du monde, aberration chromatique, grain de film e
 - **Synchronisation verticale** : la source conseille de l'activer pour éviter les déchirures. Si ton écran est FreeSync ou G-Sync, préfère la **désactiver** et laisser l'écran se synchroniser : tu gagnes en latence.
 - **Limiteur d'images** : désactivé avec FreeSync ou G-Sync.
 
-Source : [Corsair, Best settings for Battlefield 6 multiplayer (novembre 2025)](https://www.corsair.com/explorer/gamer/gaming-pcs/best-settings-for-battlefield-6-multiplayer/).
+## Souris et sensibilité
+
+Aucune source fiable ne donne de valeur conseillée pour Battlefield 6. Le plus simple est de reprendre la sensibilité d'un jeu où tu vises bien et de la convertir. Attention : pour Battlefield 6, la conversion Fragx repose sur une estimation de la communauté (senslab.pro), à vérifier en jeu.
+
+Sources : [Corsair, Best settings for Battlefield 6 multiplayer (novembre 2025)](https://www.corsair.com/explorer/gamer/gaming-pcs/best-settings-for-battlefield-6-multiplayer/) ; [PCGameCheck, Best Battlefield 6 settings for max FPS (2026)](https://pcgamecheck.com/blog/best-battlefield-6-settings-max-fps-2026), qui confirme Reflex, l'absence de génération d'images en multijoueur et l'arrêt de la synchronisation verticale au profit de G-Sync ou FreeSync avec une limite d'images juste sous la fréquence de l'écran.

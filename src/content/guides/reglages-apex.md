@@ -1,8 +1,10 @@
 ---
-titre: Les meilleurs réglages graphiques pour Apex Legends
-description: Les recommandations d'EA pour la compétition, réglage par réglage, et le bon champ de vision.
+titre: "Setup et réglages Apex Legends"
+description: "Les réglages vidéo et souris conseillés par EA pour jouer à Apex Legends en compétition, avec les outils Fragx adaptés."
 jeu: Apex Legends
-misAJour: 2026-10-26
+misAJour: 2026-11-15
+verifie: 2026-11-15
+jeuId: apex
 ---
 
 EA publie lui-même une liste de réglages conseillés pour jouer en compétition sur PC. Les voici, dans l'ordre du menu **Paramètres > Vidéo** (les noms peuvent varier légèrement selon la langue du jeu).
@@ -35,8 +37,14 @@ EA publie lui-même une liste de réglages conseillés pour jouer en compétitio
 
 Ces réglages libèrent des ressources pour garder un nombre d'images par seconde élevé et régulier pendant les combats, là où ça compte.
 
-## Et la sensibilité ?
+## Souris et sensibilité
 
-Apex utilise la même échelle de sensibilité que Counter-Strike : le [convertisseur](../../sensibilite/) te donne l'équivalent exact de tes autres jeux, et la page des [réglages des pros](../../pros/) montre ce qu'utilisent ImperialHal ou Aceu.
+| Réglage | Valeur conseillée | Pourquoi |
+|---|---|---|
+| Sensibilité de la souris | Entre 3,0 et 5,0, ou selon tes préférences | Fourchette indiquée par EA ; à 1600 DPI, une sensibilité plus basse convient souvent mieux |
+| Multiplicateur de sensibilité en visée | 1,0 | La même sensation en visée et sans visée |
+| Accélération de la souris | Désactivée | Le même geste doit toujours donner le même mouvement |
+
+EA conseille de tester ta sensibilité dans le champ de tir, en suivant des cibles mobiles et en passant d'une cible éloignée à une autre. Apex utilise la même échelle de sensibilité que Counter-Strike : le convertisseur te donne l'équivalent exact de tes autres jeux.
 
 Source : [EA Help, What are the best settings for Apex Legends on PC? (2026)](https://help.ea.com/en/articles/apex-legends/best-settings-pc).

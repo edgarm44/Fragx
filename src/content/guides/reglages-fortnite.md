@@ -1,8 +1,10 @@
 ---
-titre: Les meilleurs réglages graphiques pour Fortnite
-description: Le mode Performance et les quelques options qui font gagner le plus d'images par seconde en partie compétitive.
+titre: "Setup et réglages Fortnite"
+description: "Mode Performance, graphismes, son et sensibilité : les réglages conseillés pour jouer à Fortnite en compétition, avec les outils Fragx adaptés."
 jeu: Fortnite
-misAJour: 2026-10-26
+misAJour: 2026-11-15
+verifie: 2026-11-15
+jeuId: fortnite
 ---
 
 Fortnite propose un **mode de rendu Performance** pensé pour le jeu compétitif : c'est le réglage qui change le plus les choses sur un PC moyen. Les options se trouvent dans **Échap > roue crantée > Vidéo** ; les noms peuvent varier légèrement selon la langue du jeu.
@@ -32,5 +34,14 @@ Fortnite propose un **mode de rendu Performance** pensé pour le jeu compétitif
 - **Casque 3D** (son) : activé, pour mieux situer les bruits de pas.
 - **Visualiser les effets sonores** : activé, un indicateur montre d'où viennent les sons.
 - Laisse le **ray tracing** désactivé en partie compétitive : il coûte très cher en images par seconde.
+
+## Souris et sensibilité
+
+| Réglage | Valeur conseillée | Pourquoi |
+|---|---|---|
+| Sensibilité X et Y | Entre 5 et 10 %, la même valeur sur les deux axes | La fourchette conseillée par Epic pour jouer en compétition |
+| Accélération de la souris | Désactivée dans Windows | Le même geste doit toujours donner le même mouvement |
+
+Fortnite exprime la sensibilité en pourcentage : le convertisseur Fragx en tient compte pour passer de Fortnite à un autre jeu.
 
 Source : [Epic Games Store, Fortnite on PC: best settings for competitive play in 2026 (avril 2026)](https://store.epicgames.com/news/fortnite-on-pc-best-settings-for-competitive-play-in-2026).

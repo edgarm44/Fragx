@@ -7,10 +7,10 @@ const ORDRE = ['Tous les jeux', 'Valorant', 'Fortnite', 'Apex Legends', 'Call of
 const guides = (await getCollection('guides')).sort((a, b) => ORDRE.indexOf(a.data.jeu) - ORDRE.indexOf(b.data.jeu));
 const date = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
-<Base title="Guides" description="Guides pratiques pour optimiser ton PC et tes réglages sur les jeux de tir.">
+<Base title="Guides et réglages par jeu" description="Setup et réglages conseillés pour Valorant, Fortnite, Apex Legends, Call of Duty et Battlefield, et préparation de Windows pour jouer.">
   <div class="conteneur en-tete-page">
-    <h1>Guides</h1>
-    <p class="chapo">Les meilleurs réglages graphiques jeu par jeu, et la préparation de Windows et des pilotes. Commence par le guide « Tous les jeux ».</p>
+    <h1>Guides et réglages par jeu</h1>
+    <p class="chapo">Les réglages conseillés jeu par jeu (graphismes, souris, sensibilité) avec les outils Fragx adaptés, et la préparation de Windows et des pilotes. Commence par le guide « Tous les jeux ».</p>
   </div>
   <div class="conteneur">
     <ul class="liste">
@@ -20,7 +20,7 @@ const date = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month:
             <span class="jeu">{g.data.jeu}</span>
             <span class="titre">{g.data.titre}</span>
             <span class="desc">{g.data.description}</span>
-            <span class="date">Mis à jour le {date(g.data.misAJour)}</span>
+            <span class="date">{g.data.verifie ? `Réglages vérifiés le ${date(g.data.verifie)}` : `Mis à jour le ${date(g.data.misAJour)}`}</span>
           </a>
         </li>
       ))}

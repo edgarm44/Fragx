@@ -3,15 +3,18 @@ import { lien } from '../lib/lien';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Soutien from '../components/Soutien.astro';
 
 interface Props {
   title: string;
   description?: string;
   /** Anime le sol de l'arène (accueil uniquement : évite de fausser les mesures ailleurs) */
   anime?: boolean;
+  /** Page d'outil : affiche le bouton discret « Soutenir Fragx » sous l'outil (s'il est activé) */
+  outil?: boolean;
 }
 
-const { title, anime = false, description = 'Fragx : outils gratuits pour les joueurs de FPS. Diagnostic du setup, benchmark, entraînement de visée à ta vraie sensibilité, réglages des pros. Sans compte.' } = Astro.props;
+const { title, anime = false, outil = false, description = 'Fragx : outils gratuits pour les joueurs de FPS. Diagnostic du setup, benchmark, entraînement de visée à ta vraie sensibilité, réglages des pros. Sans compte.' } = Astro.props;
 const canonique = new URL(Astro.url.pathname.replace(/\/?$/, '/'), Astro.site).href;
 const image = new URL(lien('/og.png'), Astro.site).href;
 const estAccueil = title === 'Fragx';
@@ -55,6 +58,7 @@ const pageTitle = title === 'Fragx' ? 'Fragx : outils gratuits pour progresser s
     <Header />
     <main id="contenu">
       <slot />
+      {outil && <Soutien variante="outil" />}
     </main>
     <Footer />
   </body>

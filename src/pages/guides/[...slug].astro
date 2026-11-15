@@ -2,6 +2,8 @@
 import { lien } from '../../lib/lien';
 import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
+import { jeuParId, edpi, cm360 } from '../../data/jeux';
+import { PROS } from '../../data/pros';
 
 export async function getStaticPaths() {
   const guides = await getCollection('guides');
@@ -10,16 +12,64 @@ export async function getStaticPaths() {
 
 const { guide } = Astro.props;
 const { Content } = await render(guide);
-const date = guide.data.misAJour.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+const fmtDate = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+const date = fmtDate(guide.data.misAJour);
+const verifie = guide.data.verifie ? fmtDate(guide.data.verifie) : null;
+const jeu = guide.data.jeuId ? jeuParId(guide.data.jeuId) : undefined;
+
+// Outils Fragx adaptés au jeu
+const outils = jeu ? [
+  { href: `/sensibilite?jeu=${jeu.id}`, nom: 'Convertisseur de sensibilité', texte: `Convertis ta sensibilité vers ${jeu.nom} et calcule ton eDPI.` },
+  ...(jeu.id === 'valorant' ? [{ href: '/reticule', nom: 'Éditeur de réticule', texte: 'Crée ton réticule et copie le code à importer dans le jeu.' }] : []),
+  ...(PROS.some((g) => g.id === jeu.id) ? [{ href: '/pros', nom: 'Réglages des pros', texte: `Compare ta sensibilité à celle des joueurs pros de ${jeu.nom}.` }] : []),
+  { href: '/visee', nom: 'Entraînement de visée', texte: 'Teste ta sensibilité sur des cibles avant de lancer une partie.' },
+  { href: '/souris-ecran', nom: 'Test de souris', texte: 'Vérifie le taux d\'interrogation et les doubles-clics parasites.' },
+  { href: '/ecran', nom: 'Test d\'écran et de latence', texte: 'Vérifie que ton écran tourne à sa fréquence maximale.' },
+  { href: '/ping', nom: 'Test de ping', texte: 'Mesure la latence et la stabilité de ta connexion.' },
+  { href: '/setup', nom: 'Diagnostic du setup', texte: 'Repère les points faibles de ton PC pour jouer.' },
+] : [];
+
+// Repères de sensibilité calculés à partir des réglages des pros relevés par Fragx
+const groupe = jeu ? PROS.find((g) => g.id === jeu.id) : undefined;
+const nf = (n: number, d = 0) => n.toLocaleString('fr-FR', { maximumFractionDigits: d, minimumFractionDigits: d });
+const reperes = jeu && groupe && groupe.pros.length >= 3 ? (() => {
+  const e = groupe.pros.map((p) => edpi(jeu, p.sens, p.dpi)).sort((a, b) => a - b);
+  const c = groupe.pros.map((p) => cm360(jeu, p.sens, p.dpi)).sort((a, b) => a - b);
+  const med = (t: number[]) => (t.length % 2 ? t[(t.length - 1) / 2] : (t[t.length / 2 - 1] + t[t.length / 2]) / 2);
+  return { d: jeu.pourcent ? 1 : 0, n: e.length, eMin: e[0], eMax: e[e.length - 1], eMed: med(e), cMin: c[0], cMax: c[c.length - 1], cMed: med(c) };
+})() : null;
 ---
 <Base title={guide.data.titre} description={guide.data.description}>
   <article class="conteneur article">
     <p class="retour"><a href={lien('/guides')}>Tous les guides</a></p>
     <h1>{guide.data.titre}</h1>
-    <p class="meta">{guide.data.jeu}. Mis à jour le {date}.</p>
+    <p class="meta">{guide.data.jeu}. Mis à jour le {date}.{verifie && <> <strong class="verifie">Réglages vérifiés le {verifie}.</strong></>}</p>
+    {verifie && <p class="note-maj">Les jeux changent leurs menus à chaque grosse mise à jour : si une option a disparu ou changé de nom, garde l'idée du réglage.</p>}
+
+    {outils.length > 0 && (
+      <aside class="outils" aria-labelledby="t-outils">
+        <h2 id="t-outils">Les outils Fragx pour {jeu!.nom}</h2>
+        <ul>
+          {outils.map((o) => <li><a href={lien(o.href)}><span class="nom-outil">{o.nom}</span><span class="txt-outil">{o.texte}</span></a></li>)}
+        </ul>
+      </aside>
+    )}
+
     <div class="contenu">
       <Content />
     </div>
+
+    {reperes && (
+      <section class="reperes panneau" aria-labelledby="t-reperes">
+        <h2 id="t-reperes">Repères : la sensibilité des pros sur {jeu!.nom}</h2>
+        <p>Calculé à partir des {reperes.n} joueurs pros relevés par Fragx :</p>
+        <dl>
+          <div><dt>eDPI médian</dt><dd class="chiffre">{nf(reperes.eMed, reperes.d)}</dd><dd class="plage">de {nf(reperes.eMin, reperes.d)} à {nf(reperes.eMax, reperes.d)}</dd></div>
+          <div><dt>Distance pour un tour complet</dt><dd class="chiffre">{nf(reperes.cMed, 1)} cm</dd><dd class="plage">de {nf(reperes.cMin, 1)} à {nf(reperes.cMax, 1)} cm</dd></div>
+        </dl>
+        <p class="petit">Ce sont des repères, pas une règle : la bonne sensibilité est celle avec laquelle tu vises le mieux. Détail joueur par joueur, avec les sources, sur la page <a href={lien('/pros')}>Réglages des pros</a>.</p>
+      </section>
+    )}
   </article>
 </Base>
 
@@ -29,6 +79,24 @@ const date = guide.data.misAJour.toLocaleDateString('fr-FR', { day: 'numeric', m
   .retour { font-size: var(--t-s); }
   .meta { color: var(--gris); }
   .contenu { max-width: 48rem; margin-top: 2rem; }
+  .verifie { color: var(--ok); font-weight: 600; }
+  .note-maj { color: var(--gris); font-size: var(--t-s); max-width: 68ch; margin-top: -0.5rem; }
+  .outils { margin-top: 2rem; max-width: 64rem; }
+  .outils h2 { font-size: var(--t-xl); font-style: italic; margin: 0 0 0.75rem; }
+  .outils ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.6rem; }
+  .outils a { display: grid; gap: 0.2rem; height: 100%; padding: 0.75rem 0.9rem; border: 1px solid var(--trait); background: rgb(18 11 46 / 0.85); text-decoration: none; color: inherit; transition: border-color 0.15s; }
+  .outils a:hover, .outils a:focus-visible { border-color: var(--cyan); }
+  .nom-outil { font: 600 var(--t-m)/1.2 var(--titre); color: var(--cyan); }
+  .txt-outil { font-size: var(--t-s); color: var(--gris); }
+  .reperes { max-width: 48rem; margin-top: 2.5rem; }
+  .reperes h2 { font-size: var(--t-xl); font-style: italic; margin-top: 0; }
+  .reperes p { color: #d6d5e6; }
+  .reperes dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin: 1rem 0; }
+  .reperes dt { color: var(--gris); font-size: var(--t-s); }
+  .reperes dd { margin: 0; }
+  .reperes .chiffre { font: 700 var(--t-2xl)/1.1 var(--titre); color: var(--texte); }
+  .reperes .plage { color: var(--gris); font-size: var(--t-s); }
+  .reperes .petit { font-size: var(--t-s); color: var(--gris); }
   .contenu :global(p), .contenu :global(ul) { max-width: 68ch; }
   .contenu :global(h2) { font-size: var(--t-xl); margin-top: 2.25rem; }
   .contenu :global(p), .contenu :global(li) { color: #d6d5e6; }

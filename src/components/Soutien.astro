@@ -1,0 +1,38 @@
+---
+import { SOUTIEN, soutienVisible } from '../data/soutien';
+
+interface Props { variante?: 'pied' | 'outil' }
+const { variante = 'outil' } = Astro.props;
+---
+{soutienVisible && (variante === 'pied'
+  ? <a class="soutien-pied" href={SOUTIEN.url} target="_blank" rel="noopener">Soutenir Fragx</a>
+  : (
+    <aside class="conteneur" aria-label="Soutenir Fragx">
+      <div class="soutien">
+      <p>Cet outil t'a servi ? Fragx est gratuit, sans pub et sans compte.</p>
+      <a class="soutien-lien" href={SOUTIEN.url} target="_blank" rel="noopener">Soutenir Fragx</a>
+      <span class="soutien-via">via {SOUTIEN.plateforme}, nouvel onglet</span>
+      </div>
+    </aside>
+  ))}
+
+<style>
+  .soutien {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 1rem;
+    margin-top: 3rem; padding-block: 1rem;
+    border-top: 1px solid var(--trait);
+    color: var(--gris); font-size: var(--t-s);
+  }
+  .soutien p { margin: 0; }
+  .soutien-lien {
+    font: 600 var(--t-s)/1 var(--titre);
+    color: var(--texte); text-decoration: none;
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--trait);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .soutien-lien:hover, .soutien-lien:focus-visible { border-color: var(--magenta); color: var(--magenta); }
+  .soutien-via { font-size: var(--t-xs); }
+  .soutien-pied { color: var(--gris); }
+  .soutien-pied:hover { color: var(--magenta); }
+</style>

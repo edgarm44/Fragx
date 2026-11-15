@@ -1,5 +1,7 @@
 ---
 import { lien } from '../lib/lien';
+import Soutien from './Soutien.astro';
+import { soutienVisible } from '../data/soutien';
 const annee = new Date().getFullYear();
 ---
 <footer class="pied">
@@ -11,6 +13,7 @@ const annee = new Date().getFullYear();
     <ul>
       <li><a href={lien('/mentions-legales')}>Mentions légales et confidentialité</a></li>
       <li><a href={lien('/transparence')}>Transparence et affiliation</a></li>
+      {soutienVisible && <li><Soutien variante="pied" /></li>}
       <li>© {annee} Fragx</li>
     </ul>
   </div>

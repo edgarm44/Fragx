@@ -48,7 +48,7 @@ export const CATEGORIES: Categorie[] = [
     outils: [
       { href: '/pros', nom: 'Réglages des pros', court: 'Réglages des pros', texte: 'Sensibilité, DPI et souris de joueurs professionnels, comparables avec les tiens.', duree: 'Consultation' },
       { href: '/materiel', nom: 'Meilleur matériel', court: 'Meilleur matériel', texte: 'Souris, écran, clavier : ce qui compte pour un FPS et une sélection par budget, avec sources.', duree: 'Lecture' },
-      { href: '/guides', nom: 'Guides', court: 'Guides', texte: 'Les meilleurs réglages graphiques jeu par jeu, Windows et pilotes, expliqués simplement.', duree: 'Lecture' },
+      { href: '/guides', nom: 'Setup et réglages par jeu', court: 'Réglages par jeu', texte: 'Valorant, Fortnite, Apex, Call of Duty, Battlefield : graphismes, souris et sensibilité conseillés, Windows et pilotes.', duree: 'Lecture' },
     ],
   },
 ];
