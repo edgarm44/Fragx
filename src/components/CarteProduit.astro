@@ -35,7 +35,8 @@ if (p.lien?.affilie && !MONETISE) {
     <p class="sources">Source{p.sources.length > 1 ? 's' : ''} : {p.sources.map((s, i) => <>{i > 0 ? ', ' : ''}<a href={s.url} rel="noopener" target="_blank">{s.nom}</a> ({s.date})</>)}</p>
     {p.lien && (
       <p class="achat">
-        <a class="bouton bouton-secondaire" href={p.lien.url} rel={p.lien.affilie ? 'sponsored noopener' : 'noopener'} target="_blank">Voir chez {p.lien.boutique}</a>
+        <a class="bouton bouton-secondaire" href={p.lien.url} rel={p.lien.affilie ? 'sponsored noopener' : 'noopener'} target="_blank" aria-label={`Voir le ${p.nom} en boutique (${p.lien.boutique}, nouvel onglet)`}>Voir en boutique</a>
+        <span class="boutique">{p.lien.boutique}</span>
         {p.lien.affilie && <span class="badge-affilie">Lien affilié</span>}
       </p>
     )}
@@ -44,7 +45,7 @@ if (p.lien?.affilie && !MONETISE) {
 
 <style>
   .produit {
-    display: grid; gap: 0.9rem; align-content: start;
+    display: flex; flex-direction: column; gap: 0.9rem;
     padding: 1.25rem;
     background: linear-gradient(180deg, rgb(30 20 71 / 0.9), rgb(18 11 46 / 0.9));
     border: 1px solid var(--trait);
@@ -62,7 +63,8 @@ if (p.lien?.affilie && !MONETISE) {
   .colonnes { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem 1.5rem; }
   h4 { font: 600 var(--t-s)/1.2 var(--titre); margin: 0 0 0.35rem; color: var(--gris); }
   .colonnes ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; font-size: var(--t-s); color: #d6d5e6; }
-  footer { display: grid; gap: 0.6rem; }
+  footer { display: grid; gap: 0.6rem; margin-top: auto; }
   .sources { margin: 0; font-size: var(--t-xs); color: var(--gris); }
+  .boutique { font-size: var(--t-xs); color: var(--gris); }
   .achat { margin: 0; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 </style>

@@ -39,6 +39,8 @@ export interface CategorieMateriel {
   produits: Produit[];
   outil: { href: string; nom: string; texte: string };
   miseAJour: string;
+  /** Date de la dernière vérification des liens « Voir en boutique » (à refaire tous les 3 à 6 mois) */
+  liensVerifies: string;
 }
 
 const S = {
@@ -52,6 +54,13 @@ const S = {
   rtingsEcransBudget: { nom: 'RTINGS', url: 'https://www.rtings.com/monitor/reviews/best/budget-gaming', date: 'octobre 2026' },
   pcgClaviers: { nom: 'PC Gamer', url: 'https://www.pcgamer.com/best-gaming-keyboard/', date: 'août 2026' },
 } satisfies Record<string, Source>;
+
+/** Lien de recherche Amazon.fr simple : aucun identifiant, aucun paramètre de suivi. */
+const amazon = (recherche: string) => ({
+  url: `https://www.amazon.fr/s?k=${encodeURIComponent(recherche).replace(/%20/g, '+')}`,
+  affilie: false,
+  boutique: 'Amazon.fr',
+});
 
 export const MATERIEL: CategorieMateriel[] = [
   {
@@ -74,6 +83,7 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Meilleure souris gaming petit budget selon RTINGS', 'Forme qui convient à la plupart des tailles de main'],
         aSavoir: ['Plus lourde que les modèles récents, à cause de la pile'],
         sources: [S.rtingsSourisBudget],
+        lien: amazon('Logitech G305 Lightspeed'),
       },
       {
         nom: 'Razer DeathAdder V4 Pro', gamme: 'haut',
@@ -82,6 +92,7 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Excellentes performances en jeu', 'Très bonne finition et grande autonomie'],
         aSavoir: ['Très chère', 'Clics bruyants'],
         sources: [S.psDeathAdder],
+        lien: amazon('Razer DeathAdder V4 Pro'),
       },
       {
         nom: 'Razer Viper V4 Pro', gamme: 'haut',
@@ -90,6 +101,7 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Très légère', 'Excellentes performances'],
         aSavoir: ['Clics assez bruyants'],
         sources: [S.psViper],
+        lien: amazon('Razer Viper V4 Pro'),
       },
       {
         nom: 'Logitech G Pro X2 Superstrike', gamme: 'haut',
@@ -98,10 +110,12 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Meilleure souris gaming selon RTINGS (novembre 2026)', 'Clic à déclenchement réglable, avec retour haptique'],
         aSavoir: ['Très chère'],
         sources: [S.rtingsSouris, S.psSuperstrike],
+        lien: amazon('Logitech G Pro X2 Superstrike'),
       },
     ],
     outil: { href: '/souris-ecran', nom: 'Test de souris', texte: 'Avant de changer de souris, teste la tienne : clics par seconde, double-clic parasite et taux d\'interrogation réel.' },
     miseAJour: '2026-11-14',
+    liensVerifies: '2026-11-15',
   },
   {
     id: 'ecran',
@@ -121,8 +135,9 @@ export const MATERIEL: CategorieMateriel[] = [
         pourQui: 'Passer à la haute fréquence pour pas cher.',
         caracteristiques: ['27\u00a0pouces, incurvé', '1920 × 1080', '280\u00a0Hz', 'Dalle VA'],
         pointsForts: ['Meilleur écran 1080p selon PC Gamer', 'Très rapide pour son prix'],
-        aSavoir: ['Du 1080p sur 27\u00a0pouces est moins net que sur 24\u00a0pouces'],
+        aSavoir: ['Du 1080p sur 27\u00a0pouces est moins net que sur 24\u00a0pouces', 'Sur Amazon.fr, il apparaît sous la référence C27G4ZXU (mêmes caractéristiques annoncées) : vérifie la référence avant d\'acheter'],
         sources: [S.pcgEcrans],
+        lien: amazon('AOC C27G4ZXU'),
       },
       {
         nom: 'KTC 25M1', gamme: 'budget',
@@ -131,6 +146,7 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Meilleur écran pour la compétition selon PC Gamer'],
         aSavoir: ['Couleurs et angles de vision limités, comme toutes les dalles TN'],
         sources: [S.pcgEcrans],
+        lien: amazon('KTC 25M1 400Hz'),
       },
       {
         nom: 'AOC Q27G3XMN', gamme: 'milieu',
@@ -139,6 +155,7 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Meilleur écran gaming petit budget selon RTINGS', 'Qualité d\'image au-dessus de sa catégorie de prix'],
         aSavoir: ['180\u00a0Hz : moins rapide que les modèles compétitifs'],
         sources: [S.rtingsEcransBudget],
+        lien: amazon('AOC Q27G3XMN'),
       },
       {
         nom: 'KTC H27T22C-3', gamme: 'milieu',
@@ -146,6 +163,7 @@ export const MATERIEL: CategorieMateriel[] = [
         caracteristiques: ['27\u00a0pouces', '2560 × 1440', '210\u00a0Hz', 'Dalle IPS'],
         pointsForts: ['Meilleur écran 1440p petit budget selon PC Gamer'],
         sources: [S.pcgEcrans],
+        lien: amazon('KTC H27T22C-3 210Hz'),
       },
       {
         nom: 'Alienware AW2726DM', gamme: 'haut',
@@ -153,6 +171,7 @@ export const MATERIEL: CategorieMateriel[] = [
         caracteristiques: ['27\u00a0pouces', '2560 × 1440', '240\u00a0Hz', 'Dalle QD-OLED'],
         pointsForts: ['OLED au meilleur rapport qualité-prix selon PC Gamer et Tom\'s Hardware', 'Garantie de 3\u00a0ans qui couvre le marquage'],
         sources: [S.pcgEcrans, S.tomsEcrans],
+        lien: amazon('Alienware AW2726DM'),
       },
       {
         nom: 'Asus ROG Swift PG27AQDP', gamme: 'haut',
@@ -161,10 +180,12 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Meilleur écran gaming selon Tom\'s Hardware'],
         aSavoir: ['Il faut une carte graphique puissante pour profiter des 480\u00a0Hz'],
         sources: [S.tomsEcrans],
+        lien: amazon('Asus ROG Swift PG27AQDP'),
       },
     ],
     outil: { href: '/ecran', nom: 'Test d\'écran', texte: 'Vérifie d\'abord que ton écran actuel tourne bien à sa fréquence maximale : c\'est souvent un simple réglage de Windows.' },
     miseAJour: '2026-11-14',
+    liensVerifies: '2026-11-15',
   },
   {
     id: 'clavier',
@@ -186,6 +207,7 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Meilleur clavier petit budget selon PC Gamer', 'Rapid trigger à très bas prix'],
         aSavoir: ['Disposition AZERTY à vérifier'],
         sources: [S.pcgClaviers],
+        lien: { url: 'https://www.amazon.fr/dp/B0F282VSHQ', affilie: false, boutique: 'Amazon.fr' },
       },
       {
         nom: 'Keychron K2 HE', gamme: 'milieu',
@@ -194,6 +216,7 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Rapid trigger dans un clavier sans fil abordable'],
         aSavoir: ['Disposition AZERTY à vérifier'],
         sources: [S.pcgClaviers],
+        lien: amazon('Keychron K2 HE'),
       },
       {
         nom: 'Wooting 60HE v2', gamme: 'haut',
@@ -202,6 +225,7 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Meilleur clavier 60\u00a0% selon PC Gamer', 'Réglages très poussés'],
         aSavoir: ['Pas de flèches ni de touches de fonction dédiées', 'Disposition et disponibilité en France à vérifier'],
         sources: [S.pcgClaviers],
+        lien: { url: 'https://wooting.io/wooting-60he-v2', affilie: false, boutique: 'Wooting (site officiel)' },
       },
       {
         nom: 'Wooting 80HE', gamme: 'haut',
@@ -210,11 +234,19 @@ export const MATERIEL: CategorieMateriel[] = [
         pointsForts: ['Meilleur clavier gaming selon PC Gamer', 'Logiciel de réglage réputé'],
         aSavoir: ['Souvent en rupture de stock', 'Disposition et disponibilité en France à vérifier'],
         sources: [S.pcgClaviers],
+        lien: { url: 'https://wooting.io/wooting-80he', affilie: false, boutique: 'Wooting (site officiel)' },
       },
     ],
     outil: { href: '/guides/windows-et-pilotes', nom: 'Guide Windows et pilotes', texte: 'Le clavier ne fait pas tout : vérifie aussi que Windows et tes pilotes sont bien réglés.' },
     miseAJour: '2026-11-14',
+    liensVerifies: '2026-11-15',
   },
 ];
 
 export const categorieMateriel = (id: string) => MATERIEL.find((c) => c.id === id);
+
+/** Rappel à la construction du site : liens boutique vérifiés il y a plus de 6 mois */
+for (const c of MATERIEL) {
+  const mois = (Date.now() - new Date(c.liensVerifies).getTime()) / (30.44 * 24 * 3600 * 1000);
+  if (mois > 6) console.warn(`[Fragx] Liens boutique de « ${c.nom} » vérifiés il y a ${Math.floor(mois)} mois : revérifie-les.`);
+}

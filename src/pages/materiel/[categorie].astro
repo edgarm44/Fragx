@@ -13,6 +13,7 @@ const ordre: Gamme[] = ['budget', 'milieu', 'haut'];
 const groupes = ordre.map((g) => ({ g, produits: cat.produits.filter((p) => p.gamme === g) })).filter((x) => x.produits.length > 0);
 const autres = MATERIEL.filter((c) => c.id !== cat.id);
 const date = new Date(cat.miseAJour).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+const dateLiens = new Date(cat.liensVerifies).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
 <Base title={cat.titre} description={cat.description}>
   <article class="conteneur page">
@@ -45,6 +46,9 @@ const date = new Date(cat.miseAJour).toLocaleDateString('fr-FR', { day: 'numeric
           </div>
         </div>
       ))}
+      <p class="rappel-liens">
+        Liens « Voir en boutique » vérifiés le {dateLiens}. Ce sont de simples liens, sans affiliation. Les boutiques changent souvent leurs pages : ces liens sont revérifiés tous les 3 à 6 mois.
+      </p>
     </section>
 
     <nav class="autres" aria-label="Autres catégories">
@@ -71,5 +75,6 @@ const date = new Date(cat.miseAJour).toLocaleDateString('fr-FR', { day: 'numeric
   .groupe { margin-top: 1.5rem; }
   .titre-gamme { font: 700 var(--t-m)/1.2 var(--titre); text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); margin: 0 0 0.75rem; }
   .grille-produits { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 1rem; }
+  .rappel-liens { font-size: var(--t-xs); color: var(--gris); margin-top: 1.5rem; max-width: 75ch; }
   .autres ul { padding-left: 1.2rem; display: grid; gap: 0.4rem; }
 </style>
