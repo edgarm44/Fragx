@@ -17,6 +17,11 @@ const lignes = (pre: string, maxL: number, maxO: number): Curseur[] => [
   { id: `${pre}.epaisseur`, nom: 'Épaisseur', min: 0, max: 10, pas: 1 },
   { id: `${pre}.ecart`, nom: 'Écart', min: 0, max: maxO, pas: 1 },
 ];
+const RAPIDES: Curseur[] = [
+  { id: 'interne.longueur', nom: 'Taille', min: 0, max: 20, pas: 1 },
+  { id: 'interne.epaisseur', nom: 'Épaisseur', min: 1, max: 10, pas: 1 },
+  { id: 'interne.ecart', nom: 'Écart', min: 0, max: 20, pas: 1 },
+];
 const GROUPES = [
   { titre: 'Contour', interrupteur: 'contour', curseurs: [
     { id: 'contourOpacite', nom: 'Opacité', min: 0, max: 1, pas: 0.05 },
@@ -77,6 +82,7 @@ const GROUPES = [
         <p class="note">
           Codes des pros relevés sur valorant-spind.de (septembre 2026). Les erreurs de mouvement et de tir ne sont pas
           animées dans l'aperçu ; vérifie toujours le rendu final dans le jeu.
+          Riot ne publie pas le format des codes : il est connu grâce aux sites de la communauté et peut changer avec une mise à jour du jeu.
         </p>
       </section>
     </div>
@@ -99,6 +105,26 @@ const GROUPES = [
         </div>
       </fieldset>
 
+      <fieldset class="rapides">
+        <legend>Réglages rapides</legend>
+        {RAPIDES.map((c) => (
+          <div class="curseur">
+            <label for={`s-${c.id}`}>{c.nom}</label>
+            <input type="range" id={`s-${c.id}`} data-champ={c.id} min={c.min} max={c.max} step={c.pas} />
+            <output for={`s-${c.id}`} class="chiffre"></output>
+          </div>
+        ))}
+        <div class="cases">
+          <label><input type="checkbox" data-champ="point" /> Point central</label>
+          <label><input type="checkbox" data-champ="externe.afficher" /> Lignes extérieures</label>
+          <label><input type="checkbox" data-champ="contour" /> Contour noir</label>
+        </div>
+        <button type="button" class="preset reinit" id="reinitialiser">Revenir au réticule par défaut</button>
+      </fieldset>
+
+      <details class="avances">
+        <summary>Réglages avancés</summary>
+        <div class="avances-contenu">
       {GROUPES.map((g) => (
         <fieldset>
           <legend>
@@ -120,6 +146,8 @@ const GROUPES = [
         </fieldset>
       ))}
       <label class="interrupteur"><input type="checkbox" data-champ="fondu" /> Estomper le réticule avec l'erreur de tir</label>
+        </div>
+      </details>
     </form>
   </div>
 </Base>
@@ -145,6 +173,11 @@ const GROUPES = [
   .statut[data-erreur] { color: var(--alerte); }
   .presets { display: flex; gap: 0.5rem; flex-wrap: wrap; }
   .note { color: var(--gris); font-size: var(--t-xs); margin-top: 1rem; }
+  .reinit { margin-top: 1rem; }
+  .avances { border: 1px solid var(--trait); background: rgb(18 11 46 / 0.6); }
+  .avances summary { cursor: pointer; padding: 0.85rem 1rem; font-family: var(--titre); font-weight: 700; }
+  .avances summary:hover { color: var(--cyan); }
+  .avances-contenu { display: grid; gap: 1rem; padding: 0 1rem 1rem; }
 
   .reglages { display: grid; gap: 1rem; }
   fieldset { border: 1px solid var(--trait); background: rgb(18 11 46 / 0.85); padding: 0.85rem 1rem 1rem; margin: 0; }
@@ -234,6 +267,13 @@ const GROUPES = [
     else if (el === perso) { r.perso = perso.value.slice(1).toUpperCase(); r.couleur = 8; form.querySelector<HTMLInputElement>('input[name="couleur"][value="8"]')!.checked = true; }
     else if (el.dataset.champ) definir(el.dataset.champ, el.type === 'checkbox' ? el.checked : Number(el.value));
     if (el.dataset.champ?.endsWith('.longueur')) definir(el.dataset.champ.replace('longueur', 'longueurV'), Number(el.value));
+    // Réglages rapides et avancés partagent certains champs : on garde les deux en phase
+    if (el.dataset.champ) {
+      for (const autre of form.querySelectorAll<HTMLInputElement>(`[data-champ="${el.dataset.champ}"]`)) {
+        if (autre === el) continue;
+        if (autre.type === 'checkbox') autre.checked = el.checked; else autre.value = el.value;
+      }
+    }
     majAffichage();
   });
   form.addEventListener('submit', (e) => e.preventDefault());
@@ -308,9 +348,15 @@ const GROUPES = [
     versFormulaire();
   }
   document.getElementById('importer')!.addEventListener('click', () => importer((document.getElementById('code-import') as HTMLInputElement).value));
-  for (const b of document.querySelectorAll<HTMLButtonElement>('.preset')) {
+  for (const b of document.querySelectorAll<HTMLButtonElement>('.preset[data-code]')) {
     b.addEventListener('click', () => { importer(b.dataset.code!); statutImport.textContent = `Réticule « ${b.textContent} » chargé.`; });
   }
+
+  document.getElementById('reinitialiser')!.addEventListener('click', () => {
+    r = copier(DEFAUT); general = []; reste = [];
+    statutImport.textContent = '';
+    versFormulaire();
+  });
 
   versFormulaire();
 </script>
